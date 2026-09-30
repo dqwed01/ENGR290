@@ -1,4 +1,5 @@
 # Prerequisites
+.vscode/
 *.d
 
 # Compiled Object files
@@ -35,16 +36,19 @@
 *.lib
 
 # Executables
+out/
 *.exe
 *.out
 *.app
 
 # Build directories
 build/
+_build/
 Build/
 build-*/
 
 # CMake generated files
+cmake/
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
