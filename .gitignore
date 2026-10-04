@@ -71,3 +71,13 @@ vcpkg_installed/
 # test output & cache
 Testing/
 .cache/
+
+.generated_files/
+dist/
+nbproject/
+Makefile*
+Package-*
+private/
+!cmake/**/user.cmake
+cmake/**/.generated/*
+cmake/**/CMake*

@@ -10,8 +10,9 @@
 //Register Opeartions
 #define DIGITAL_WRITE_HIGH(x,y) (x) |= (1U<<(y))
 #define DIGITAL_WRITE_LOW(x,y) (x) &= ~(1U<<(y))
+#define DIGITAL_READ(x,y) (x) & (1U<<(y))
 
 //Return the length of how long a pulse lasted
-uint32_t readPulse(uint8_t, uint8_t);
+uint32_t readPulse(uint8_t, uint8_t, uint16_t);
 
 #endif

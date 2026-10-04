@@ -11,13 +11,19 @@
 #include <util/delay.h>
 #include <math.h>
 
-#include "include/hovercraft.h"
+#include "src/hovercraft.h"
+#include "src/util.h"
+#include "src/timer.h"
 
 int main(){
     hovercraft_init();
     // Add your code here and press Ctrl + Shift + B to build
     while(1) {
         //TODO
+        DIGITAL_WRITE_HIGH(PORTB, PB5);
+        delay_ms(1000);
+        DIGITAL_WRITE_LOW(PORTB, PB5);
+        delay_ms(1000);
     }
 
     return 0;
