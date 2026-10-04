@@ -14,16 +14,17 @@
 #include "src/hovercraft.h"
 #include "src/util.h"
 #include "src/timer.h"
+#include "src/ultrasonic.h"
 
 int main(){
+    Serial.begin(9600);
     hovercraft_init();
-    // Add your code here and press Ctrl + Shift + B to build
+    uint16_t distance_cm = 0;
     while(1) {
-        //TODO
-        DIGITAL_WRITE_HIGH(PORTB, PB5);
-        delay_ms(1000);
-        DIGITAL_WRITE_LOW(PORTB, PB5);
-        delay_ms(1000);
+        distance_cm = us_read(1);
+        Serial.print(distance_cm);
+        Serial.println(" cm");
+        delay_ms(500);
     }
 
     return 0;

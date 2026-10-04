@@ -31,7 +31,10 @@ void delay_one_ms(){
 }
 
 void delay_micro(uint16_t time_micro){
-    TIMER1_CNTR = (TIMER1_MAX_TICK) - time_micro * (TICKS_1US_8_PRESCALE);
+    uint16_t time_bits = (TIMER1_MAX_TICK) - time_micro * (TICKS_1US_8_PRESCALE);
+
+    TIMER1_CNTR_H = (time_bits & 0xFF00) >> 8;
+    TIMER1_CNTR_L = (time_bits & 0X00FF);
     TIMER1_CTR_REG_B = 0x02; //Set Prescaler to 8
 
     while((TIMER1_INT_FLAG_REG & (1 << TOV1)) == 0);
@@ -41,13 +44,7 @@ void delay_micro(uint16_t time_micro){
 }
 
 void delay_ms(uint16_t time_ms){
-    for(int i = 0; i < time_ms; i++){
+    for(uint16_t i = 0; i < time_ms; i++){
         delay_one_ms();
-    }
-}
-
-void delay_micro(uint16_t time_us){
-    for(int i = 0; i < time_us; i++){
-        delay_one_micro();
     }
 }
