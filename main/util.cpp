@@ -8,16 +8,18 @@
 #include "src/pins.h"
 #include "src/timer.h"
 
-uint32_t read_pulse(volatile uint8_t* p_port, uint8_t pin, uint8_t value, uint16_t timeout_in_ticks){
-    uint32_t time_elapsed = 0;
+uint16_t read_pulse(volatile uint8_t* p_port, uint8_t pin, uint8_t value, uint16_t timeout_in_ticks){
+    uint16_t time_elapsed = 0;
     uint16_t time_bits = (TIMER1_MAX_TICK) - timeout_in_ticks;
     //Precompute Timer Counter
     // TIMER1_CNTR = TIMER1_MAX_TICK - timeout_in_ticks;
     TIMER1_CNTR = time_bits;
 
     //Wait for pin to go High
-    //THIS ISN'T BOUNDED, SO THIS CAN HANG FOREVER
-    do {} while (!(DIGITAL_READ(*p_port, pin)));
+    uint16_t guard = 60000;
+    do {
+        if(--guard == 0) return 0xFFFF; //Highest Time elapsed to prevent early collisions
+    } while ((DIGITAL_READ(*p_port, pin)) != value);
 
     //Start counting and wait for pin to go Low or until timeout is reached
     TIMER1_CTR_REG_B = 0x04; //Set Prescaler to 256
