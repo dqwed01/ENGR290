@@ -27,6 +27,7 @@
 #define PWM0 PB1
 
 //Ultrasonic Sensor Pins
+//TO BE UPDATED
 #define US1_ECHO PB0
 #define US1_TRIG PB4
 

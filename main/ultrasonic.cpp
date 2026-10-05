@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <util/delay.h>
 
 #include "src/pins.h"
 #include "src/util.h"
@@ -31,7 +32,7 @@ uint16_t us_read(uint8_t target_us){
 
         //Start Ranging
         DIGITAL_WRITE_HIGH(*us_trig_port, us_trig);
-        delay_micro(10);
+        _delay_us(10);
         DIGITAL_WRITE_LOW(*us_trig_port, us_trig);
 
         //Get Echo pulse

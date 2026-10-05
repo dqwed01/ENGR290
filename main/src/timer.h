@@ -13,7 +13,5 @@
 void timer_init();
 void delay_one_ms();
 void delay_ms(uint16_t);
-void delay_one_micro();
-void delay_micro(uint16_t);
 
 #endif

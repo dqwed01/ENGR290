@@ -15,27 +15,43 @@ uint16_t read_pulse(volatile uint8_t* p_port, uint8_t pin, uint8_t value, uint16
     //Precompute Timer Counter
     TIMER1_CNTR = time_bits;
 
-    //Wait for pin to go High
+    //Wait for pin to reach value
     uint16_t guard = 60000;
     do {
-        if(--guard == 0) return 0xFFFF; //Highest Time elapsed to prevent early collisions
+        if(--guard == 0){
+            UART_transmit("Failed at guard");
+            return 0xFFFF; //Highest Time elapsed to prevent early collisions
+        } 
     } while ((DIGITAL_READ(*p_port, pin)) != value);
 
     //Start counting and wait for pin to go Low or until timeout is reached
-    TIMER1_CTR_REG_B = 0x04; //Set Prescaler to 256
-    do {} while (DIGITAL_READ(*p_port, pin) == value && (TIMER1_INT_FLAG_REG & (1 << TOV1)) == 0);
+    uint16_t max_overflows = timeout_in_ticks >> 8;   // 3750 -> 14 (about 57 ms)
+    uint16_t overflows = 0;
+
+    TIMER0_CTR_REG_B = 0;
+    TIMER0_CNTR = 0;
+    TIMER0_INT_FLAG_REG = (1 << TOV0);
+    TIMER0_CTR_REG_B = (1 << CS02);                   // prescaler 256 -> 16 us/tick
+
+    while (DIGITAL_READ(*p_port, pin) == value) {
+        if (TIMER0_INT_FLAG_REG & (1 << TOV0)) {
+            TIMER0_INT_FLAG_REG = (1 << TOV0);
+            if (++overflows >= max_overflows) {
+                TIMER0_CTR_REG_B = 0;
+                UART_transmit("Failed at overflow");
+                return 0xFFFF;                             // timed out
+            }
+        }
+    }
 
     //Stop counting and check if timeout occured
-    TIMER1_CTR_REG_B = 0;
-    if(DIGITAL_READ(TIMER1_INT_FLAG_REG, TOV1)){
-        //Loop ended due to timeout
-        DIGITAL_WRITE_HIGH(TIMER1_INT_FLAG_REG, TOV1); //Clear Timer Overflow flag
+    TIMER0_CTR_REG_B = 0;                             // stop first, then read
+    uint8_t low = TIMER0_CNTR;
+    if (TIMER0_INT_FLAG_REG & (1 << TOV0)) {          // overflow landed just before the stop
+        TIMER0_INT_FLAG_REG = (1 << TOV0);
+        overflows++;
     }
-    else{
-        //Pulse was registered
-        time_elapsed = TIMER1_CNTR - time_bits;
-    }
-    return time_elapsed;
+    return (overflows << 8) | low;
 }
 
 uint16_t adc_read(uint8_t pin){

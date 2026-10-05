@@ -11,7 +11,7 @@
 uint16_t led_ms = 0;
 
 ISR(TIMER2_COMPA_vect){                          // fires every 1 ms
-    if(++led_ms >= 1500){
+    if(++led_ms >= 750){
         led_ms = 0;
         PINB = (1 << PB5);           // writing 1 to PINx toggles the pin
     }
@@ -22,11 +22,6 @@ void timer_init(){
     TIMER0_INT_MASK = 0; //No Interrupt Timers
     TIMER0_CTR_REG_A = 0; //Disconnect OC0x pins and use Normal Waveform Generator
     TIMER0_INT_FLAG_REG = ~0; // Clear all interrupt flags
-
-    TIMER1_CTR_REG_B = 0;
-    TIMER1_INT_MASK = 0;
-    TIMER1_CTR_REG_A = 0;
-    TIMER1_INT_FLAG_REG = ~0;
 
     TCCR2B = 0;                                  // stop Timer2
     TCCR2A = (1 << WGM21);                       // CTC mode
@@ -45,19 +40,6 @@ void delay_one_ms(){
 
     TIMER0_CTR_REG_B = 0; //Stop Timer upon overflow
     DIGITAL_WRITE_HIGH(TIMER0_INT_FLAG_REG, TOV0); //Clear Timer Overflow flag
-}
-
-void delay_micro(uint16_t time_micro){
-    uint16_t time_bits = (TIMER1_MAX_TICK) - time_micro * (TICKS_1US_8_PRESCALE);
-
-    TIMER1_CNTR_H = (time_bits & 0xFF00) >> 8;
-    TIMER1_CNTR_L = (time_bits & 0X00FF);
-    TIMER1_CTR_REG_B = 0x02; //Set Prescaler to 8
-
-    while((TIMER1_INT_FLAG_REG & (1 << TOV1)) == 0);
-
-    TIMER1_CTR_REG_B = 0; //Stop Timer upon overflow
-    DIGITAL_WRITE_HIGH(TIMER1_INT_FLAG_REG, TOV1); //Clear Timer Overflow flag
 }
 
 void delay_ms(uint16_t time_ms){

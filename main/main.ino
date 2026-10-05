@@ -17,6 +17,7 @@
 #include "src/timer.h"
 #include "src/ultrasonic.h"
 #include "src/infrared.h"
+#include "src/pwm.h"
 
 int main(){
     char message[64];
@@ -28,16 +29,26 @@ int main(){
         sprintf(message, "%d cm ultrasonic\n", distance_cm);
         UART_transmit(message);
 
-        // distance_cm = ifr_read();
-        // sprintf(message, "%d cm infrared\n", distance_cm);
-        // UART_transmit(message);
+        //distance_cm = ifr_read();
+        //sprintf(message, "%d cm infrared\n", distance_cm);
+        //UART_transmit(message);
 
-        if(distance_cm < 16 || distance_cm > 84){
+        if(distance_cm < 16 || distance_cm > 49){
             TCCR2B = (1 << CS22) | (1 << CS20); // prescaler 128, starts the timer
         }
         else{
-          TCCR2B = 0;  
+            
+            TCCR2B = 0;  
         }
+
+        int pwm_duty = 0;
+        if(distance_cm <= 16){
+            pwm_duty = 100;
+        }
+        else if (distance_cm < 49){
+            pwm_duty = ((49-distance_cm)*100)/33;
+        }
+        pwm_set_duty(pwm_duty);
         delay_ms(500);
     }
 
