@@ -1,5 +1,6 @@
 #define F_CPU 16000000UL
 
+#include <stdio.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
@@ -12,7 +13,6 @@ uint16_t read_pulse(volatile uint8_t* p_port, uint8_t pin, uint8_t value, uint16
     uint16_t time_elapsed = 0;
     uint16_t time_bits = (TIMER1_MAX_TICK) - timeout_in_ticks;
     //Precompute Timer Counter
-    // TIMER1_CNTR = TIMER1_MAX_TICK - timeout_in_ticks;
     TIMER1_CNTR = time_bits;
 
     //Wait for pin to go High
@@ -31,7 +31,6 @@ uint16_t read_pulse(volatile uint8_t* p_port, uint8_t pin, uint8_t value, uint16
         //Loop ended due to timeout
         DIGITAL_WRITE_HIGH(TIMER1_INT_FLAG_REG, TOV1); //Clear Timer Overflow flag
     }
-
     else{
         //Pulse was registered
         time_elapsed = TIMER1_CNTR - time_bits;
@@ -39,7 +38,33 @@ uint16_t read_pulse(volatile uint8_t* p_port, uint8_t pin, uint8_t value, uint16
     return time_elapsed;
 }
 
+uint16_t adc_read(uint8_t pin){
+    if(pin >= 8){
+        return 0xFFFF; //Invalid ADC pin
+    } 
+
+    char message[16];
+    ADMUX = pin; //Ensure that AREF is used
+    DIGITAL_WRITE_HIGH(ADCSRA, ADSC); //Start ADC conversion
+    int guard = 20000;
+    do {
+        if(--guard == 0){
+            sprintf(message, "ADC Failure\n");
+            UART_transmit(message);
+            return 0xFFFF;
+        }
+    } while (DIGITAL_READ(ADCSRA, ADSC));
+
+    sprintf(message, "ADC %d\n", ADC);
+    UART_transmit(message);
+
+    uint16_t value = ADCL;
+    value |= (ADCH << 8);
+    return value;
+}
+
 void UART_init(){
+    //Baud Rate current hard coded to 9600 but should look to make it modifiable
     // Set baud rate in UBRR0H and UBRR0L
     UART_BAUD_RATE_REG0_H = (unsigned char)(UBRR_VAL >> 8);
     UART_BAUD_RATE_REG0_L = (unsigned char)UBRR_VAL;

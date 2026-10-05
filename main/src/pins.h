@@ -28,7 +28,7 @@
 
 //Ultrasonic Sensor Pins
 #define US1_ECHO PB0
-#define US1_TRIG PB5
+#define US1_TRIG PB4
 
 #define US2_ECHO PD2
 #define US2_TRIG PB3

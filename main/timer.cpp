@@ -8,6 +8,15 @@
 #include "src/timer.h"
 #include "src/pins.h"
 
+uint16_t led_ms = 0;
+
+ISR(TIMER2_COMPA_vect){                          // fires every 1 ms
+    if(++led_ms >= 1500){
+        led_ms = 0;
+        PINB = (1 << PB5);           // writing 1 to PINx toggles the pin
+    }
+}
+
 void timer_init(){
     TIMER0_CTR_REG_B = 0; //Stop Timer
     TIMER0_INT_MASK = 0; //No Interrupt Timers
@@ -18,6 +27,14 @@ void timer_init(){
     TIMER1_INT_MASK = 0;
     TIMER1_CTR_REG_A = 0;
     TIMER1_INT_FLAG_REG = ~0;
+
+    TCCR2B = 0;                                  // stop Timer2
+    TCCR2A = (1 << WGM21);                       // CTC mode
+    OCR2A  = 124;                                // 16 MHz / 128 / 125 = 1 kHz
+    TCNT2  = 0;
+    TIFR2  = (1 << OCF2A);                       // clear stale flag
+    TIMSK2 = (1 << OCIE2A);                      // enable compare-match interrupt
+
 }
 
 void delay_one_ms(){
