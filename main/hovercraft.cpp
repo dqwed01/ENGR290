@@ -10,6 +10,7 @@
 #include "src/timer.h"
 
 void hovercraft_init(){
+    UART_init();
     timer_init();
     us_sensor_init();
 }

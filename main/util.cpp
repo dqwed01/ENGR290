@@ -58,6 +58,12 @@ void UART_transmit_char(unsigned char data) {
     UDR0 = data;
 }
 
+void UART_transmit(char* message){
+    for(uint8_t i = 0; message[i] != '\0'; i++){
+        UART_transmit_char((message[i]));
+    }
+}
+
 unsigned char UART_receive(void) {
     // Wait for data to be received
     while (!(UART_CTR_STATUS_REG0_A & (1 << RXC0)));

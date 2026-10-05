@@ -6,6 +6,7 @@
  */
 #define F_CPU 16000000UL
 
+#include <stdio.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
@@ -17,13 +18,13 @@
 #include "src/ultrasonic.h"
 
 int main(){
-    Serial.begin(9600);
+    char message[64];
     hovercraft_init();
     uint16_t distance_cm = 0;
     while(1) {
         distance_cm = us_read(1);
-        Serial.print(distance_cm);
-        Serial.println(" cm");
+        sprintf(message, "%d cm\n", distance_cm);
+        UART_transmit(message);
         delay_ms(500);
     }
 
