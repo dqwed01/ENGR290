@@ -15,7 +15,7 @@ void hovercraft_init(){
     UART_init();
     pwm_init();
     timer_init();
-    us_sensor_init();
-    //ifr_sensor_init();
+    //us_sensor_init();
+    ifr_sensor_init();
     delay_ms(10);
 }

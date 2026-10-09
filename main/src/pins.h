@@ -24,7 +24,7 @@
 #define UART_BAUD_RATE_REG0_L UBRR0L
 
 //PWM Pins
-#define PWM0 PB1
+#define PWM0 PD3
 
 //Ultrasonic Sensor Pins
 //TO BE UPDATED

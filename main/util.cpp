@@ -9,7 +9,7 @@
 #include "src/pins.h"
 #include "src/timer.h"
 
-uint16_t read_pulse(volatile uint8_t* p_port, uint8_t pin, uint8_t value, uint16_t timeout_in_ticks){
+uint32_t read_pulse(volatile uint8_t* p_port, uint8_t pin, uint8_t value, uint16_t timeout_in_ticks){
     uint16_t time_elapsed = 0;
     uint16_t time_bits = (TIMER1_MAX_TICK) - timeout_in_ticks;
     //Precompute Timer Counter
@@ -54,7 +54,7 @@ uint16_t read_pulse(volatile uint8_t* p_port, uint8_t pin, uint8_t value, uint16
     return (overflows << 8) | low;
 }
 
-uint16_t adc_read(uint8_t pin){
+uint32_t adc_read(uint8_t pin){
     if(pin >= 8){
         return 0xFFFF; //Invalid ADC pin
     } 
@@ -74,7 +74,7 @@ uint16_t adc_read(uint8_t pin){
     sprintf(message, "ADC %d\n", ADC);
     UART_transmit(message);
 
-    uint16_t value = ADCL;
+    uint32_t value = ADCL;
     value |= (ADCH << 8);
     return value;
 }
