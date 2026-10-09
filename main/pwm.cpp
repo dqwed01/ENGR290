@@ -5,27 +5,30 @@
 #include "src/pwm.h"
 
 void pwm_init(void){
-    DIGITAL_WRITE_HIGH(DDRD, PWM0);       // PD3 output
-    DIGITAL_WRITE_LOW(PORTD, PWM0);       // idle low
+    DIGITAL_WRITE_HIGH(DDRB, PWM0);       // PB1 output
+    DIGITAL_WRITE_LOW(PORTB, PWM0);       // idle low
 
-    TCCR2B = 0;                                   // stop timer
-    TCCR2A = (1 << WGM21) | (1 << WGM20);         // mode 3: fast PWM, TOP = 0xFF
-    OCR2B  = 0;
-    TCNT2  = 0;
-    TIFR2  = ~0;
-    TCCR2B = (1 << CS21);                         // prescaler 8, starts timer
-    // OC2B stays disconnected until a non-zero duty is set
-
+    TIMER1_CTR_REG_B = 0;                           // stop timer
+    TIMER1_CTR_REG_A = (1 << WGM11);                // mode 14: fast PWM, TOP = ICR1
+    ICR1   = PWM_TOP;
+    OCR1A  = 0;
+    TIMER1_CNTR  = 0;
+    TIMER1_INT_FLAG_REG  = ~0;
+    TIMER1_CTR_REG_B = (1 << WGM13) | (1 << WGM12) | (1 << CS11);   // prescaler 8, starts timer
+    // OC1A stays disconnected until a non-zero duty is set
 }
 
 void pwm_set_duty(uint8_t percent){
     if(percent == 0){
-        TCCR2A &= ~(1 << COM2B1);                 // disconnect OC2B so the pin is truly low
-        DIGITAL_WRITE_LOW(PORTD, PWM0);
+        TIMER1_CTR_REG_A &= ~(1 << COM1A1);         // disconnect OC1A so the pin is truly low
+        DIGITAL_WRITE_LOW(PORTB, PWM0);
         return;
     }
-    else if(percent > 100) percent = 100;
-    OCR2B = (uint8_t)(((uint16_t)255 * percent) / 100);   // 100% -> 255 = constant high
-    TCCR2A |= (1 << COM2B1);                      // non-inverting output on OC2B
+    if(percent >= 100){
+        OCR1A = PWM_TOP + 1;              // compare never matches -> constant high
+    } else {
+        OCR1A = (uint16_t)(((uint32_t)(PWM_TOP + 1) * percent) / 100);
+    }
+    TIMER1_CTR_REG_A |= (1 << COM1A1);              // non-inverting output on OC1A
 
 }

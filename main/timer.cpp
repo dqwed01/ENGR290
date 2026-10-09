@@ -8,14 +8,16 @@
 #include "src/timer.h"
 #include "src/pins.h"
 
+
 uint16_t led_ms = 0;
 
-ISR(TIMER1_COMPA_vect){                          // fires every 1 ms
-    if(++led_ms >= 750){
+ISR(TIMER2_COMPA_vect){                          // fires every 1 ms
+    if(++led_ms >= 1500){
         led_ms = 0;
         PINB = (1 << PB5);           // writing 1 to PINx toggles the pin
     }
 }
+
 
 void timer_init(){
     TIMER0_CTR_REG_B = 0; //Stop Timer
@@ -23,13 +25,12 @@ void timer_init(){
     TIMER0_CTR_REG_A = 0; //Disconnect OC0x pins and use Normal Waveform Generator
     TIMER0_INT_FLAG_REG = ~0; // Clear all interrupt flags
 
-    TCCR1B = 0;
-    TCCR1A = 0;
-    TCCR1B = (1 << WGM12);                 // CTC, TOP = OCR1A
-    OCR1A  = 1999;                         // 16 MHz / 8 / 2000 = 1 kHz
-    TCNT1  = 0;
-    TIMSK1 = (1 << OCIE1A);
-    TCCR1B |= (1 << CS11);                 // prescaler 8
+    TCCR2B = 0;                                  // stop Timer2
+    TCCR2A = (1 << WGM21);                       // CTC mode
+    OCR2A  = 124;                                // 16 MHz / 128 / 125 = 1 kHz
+    TCNT2  = 0;
+    TIFR2  = (1 << OCF2A);                       // clear stale flag
+    TIMSK2 = (1 << OCIE2A);                      // enable compare-match interrupt
 }
 
 void delay_one_ms(){

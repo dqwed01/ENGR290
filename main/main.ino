@@ -19,7 +19,7 @@
 #include "src/infrared.h"
 #include "src/pwm.h"
 
-//#define US_TESTING
+#define US_TESTING
 
 int main(){
     char message[64];
@@ -29,21 +29,20 @@ int main(){
     while(1) {
 #ifdef US_TESTING
         distance_cm = us_read(2);
-        sprintf(message, "%f cm ultrasonic\n", distance_cm);
+        sprintf(message, "%d cm ultrasonic\n", (uint16_t)(distance_cm * 100));
         UART_transmit(message);
 #else
         distance_cm = ifr_read();
-        sprintf(message, "%d cm infrared\n", (uint16_t) distance_cm * 100);
+        sprintf(message, "%d cm infrared\n", (uint16_t) (distance_cm * 100));
         UART_transmit(message);
         //Serial.println(distance_cm);
 #endif
 
-        if(distance_cm < 16 || distance_cm > 49){
-            TIMSK1 |= (1 << OCIE1A);                 // LED blinks
+        if(distance_cm < 16 || distance_cm > 84){
+            TCCR2B = (1 << CS22) | (1 << CS20); // prescaler 128, starts the timer
         }
         else{
-            TIMSK1 &= ~(1 << OCIE1A);                // LED stops
-            PORTB &= ~(1 << PB5);                    // and turns off
+          TCCR2B = 0;  
         }
 
         int pwm_duty = 0;
