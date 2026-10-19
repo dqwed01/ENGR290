@@ -7,40 +7,59 @@
 #include "src/util.h"
 #include "src/timer.h"
 #include "src/pins.h"
+#include "src/global.h"
 
+uint16_t isr_period = 0;
 
-uint16_t led_ms = 0;
-
-ISR(TIMER2_COMPA_vect){                          // fires every 1 ms
-    if(++led_ms >= 1500){
-        led_ms = 0;
-        PINB = (1 << PB5);           // writing 1 to PINx toggles the pin
+ISR(TIMER2_COMPB_vect){ //Triggers every 125us
+    OCR2B += 251;
+    if(blink_enabled){
+        if(++isr_period >= 6000){
+            isr_period = 0;
+            DIGITAL_TOGGLE(PORTB, PB5);
+        }
+    }
+    else{
+        isr_period = 0; //Prevent shorter first toggle
     }
 }
 
 
 void timer_init(){
-    TIMER0_CTR_REG_B = 0; //Stop Timer
-    TIMER0_INT_MASK = 0; //No Interrupt Timers
-    TIMER0_CTR_REG_A = 0; //Disconnect OC0x pins and use Normal Waveform Generator
-    TIMER0_INT_FLAG_REG = ~0; // Clear all interrupt flags
+    TCCR0B = 0; //Stop Timer
+    TIMSK0 = 0; //No Interrupt Timers
+    TCCR0A = 0; //Disconnect OC0x pins and use Normal Waveform Generator
+    TIFR0 = ~0; // Clear all interrupt flags
 
-    TCCR2B = 0;                                  // stop Timer2
-    TCCR2A = (1 << WGM21);                       // CTC mode
-    OCR2A  = 124;                                // 16 MHz / 128 / 125 = 1 kHz
+    //Timer 2 uses PWM on OCR2A and ISR on OCR2B
+    // stop Timer2
+    TCCR2B &= 0xF8;
+
+    DIGITAL_WRITE_HIGH(DDRB, PB5);       // PB5 output
+    //Timer2 PWM
+    //Fast PWM Mode with TOP = 0xFF
+    //Clear OC2A on compare match, set OC2A at BOTTOM
+    TCCR2A |= (1 << COM2A1) | (1 << COM2A0) | (1 << WGM21) | (1 << WGM20);
     TCNT2  = 0;
-    TIFR2  = (1 << OCF2A);                       // clear stale flag
-    TIMSK2 = (1 << OCIE2A);                      // enable compare-match interrupt
+
+    //Timer2 ISR
+    OCR2B  = 250;
+    TIFR2  = (1 << OCF2B); // clear stale flag
+    TIMSK2 = (1 << OCIE2B); // enable compare-match interrupt
+
+    //Note: If you modify this you'll also have to modify the ISR ms value
+    //Timer2 Prescaler of 8       
+    TCCR2B |= (1 << CS21);
 }
 
 void delay_one_ms(){
-    TIMER0_CNTR = (TIMER0_MAX_TICK) - (TICKS_1MS_64_PRESCALE);
-    TIMER0_CTR_REG_B = 0x03; //Set Prescaler to 64
+    TCNT0 = (TIMER0_MAX_TICK) - (TICKS_1MS_64_PRESCALE);
+    TCCR0B = 0x03; //Set Prescaler to 64
 
-    while((TIMER0_INT_FLAG_REG & (1 << TOV0)) == 0);
+    while((TIFR0 & (1 << TOV0)) == 0);
 
-    TIMER0_CTR_REG_B = 0; //Stop Timer upon overflow
-    DIGITAL_WRITE_HIGH(TIMER0_INT_FLAG_REG, TOV0); //Clear Timer Overflow flag
+    TCCR0B = 0; //Stop Timer upon overflow
+    DIGITAL_WRITE_HIGH(TIFR0, TOV0); //Clear Timer Overflow flag
 }
 
 void delay_ms(uint16_t time_ms){

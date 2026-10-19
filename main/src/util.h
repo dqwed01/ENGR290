@@ -10,6 +10,7 @@
 //Register Opeartions
 #define DIGITAL_WRITE_HIGH(x,y) (x) |= (1U<<(y))
 #define DIGITAL_WRITE_LOW(x,y) (x) &= ~(1U<<(y))
+#define DIGITAL_TOGGLE(x,y) (x) ^= (1U<<(y))
 #define DIGITAL_READ(x,y) (x) & (1U<<(y))
 #define DIGITAL_READ(x,y) (((x) >> (y)) & 1U)
 #define UART_BAUD_RATE 9600

@@ -18,14 +18,14 @@
 #include "src/ultrasonic.h"
 #include "src/infrared.h"
 #include "src/pwm.h"
+#include "src/global.h"
 
-#define US_TESTING
+//#define US_TESTING
 
 int main(){
     char message[64];
     hovercraft_init();
     float distance_cm = 0;
-    //Serial.begin(9600);
     while(1) {
 #ifdef US_TESTING
         distance_cm = us_read(2);
@@ -35,14 +35,14 @@ int main(){
         distance_cm = ifr_read();
         sprintf(message, "%d cm infrared\n", (uint16_t) (distance_cm * 100));
         UART_transmit(message);
-        //Serial.println(distance_cm);
 #endif
 
         if(distance_cm < 16 || distance_cm > 84){
-            TCCR2B = (1 << CS22) | (1 << CS20); // prescaler 128, starts the timer
+            blink_enabled = 1;
         }
         else{
-          TCCR2B = 0;  
+            blink_enabled = 0;
+            DIGITAL_WRITE_LOW(PORTB, PB5);
         }
 
         int pwm_duty = 0;
@@ -50,10 +50,12 @@ int main(){
             pwm_duty = 100;
         }
         else if (distance_cm < 49){
-            pwm_duty = ((49-distance_cm)*100)/33;
+            pwm_duty = ((49-((int)distance_cm))*100)/33;
         }
+        sprintf(message, "PWM Duty: %d\n", pwm_duty);
+        UART_transmit(message);
         pwm_set_duty(pwm_duty);
-        delay_ms(500);
+        delay_ms(100);
     }
 
     return 0;

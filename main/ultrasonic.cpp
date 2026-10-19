@@ -9,15 +9,14 @@
 #include "src/util.h"
 #include "src/ultrasonic.h"
 #include "src/timer.h"
+#include "src/global.h"
 
 void us_sensor_init(){
-    cli();
     DDRB |= ((OUTPUT<<US1_TRIG)|(OUTPUT<<US2_TRIG) | (OUTPUT<<PB5)); //Set TRIG pin to Output
     DIGITAL_WRITE_LOW(PORTB, US1_TRIG);
     DIGITAL_WRITE_LOW(PORTB, US2_TRIG);
     DDRB &= ~((1)<<US1_ECHO); 
     DDRD &= ~((1)<<US2_ECHO);
-    sei();
 }
 
 float us_read(uint8_t target_us){
