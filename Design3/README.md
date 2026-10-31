@@ -588,16 +588,6 @@ This figure presents a hypothetical competition-score sensitivity analysis for d
 
 The scores are illustrative rather than validated Design 3 results.
 
-### Running the MATLAB Simulation
-
-1. Open MATLAB.
-2. Open `Design3/MATLAB/hovercraft3.m`.
-3. Select the recommended or original dimensions.
-4. Run the simulation.
-5. Review the numerical results.
-6. Inspect the six figures.
-7. Replace estimated parameters with measured values.
-
 ---
 
 ## Design Advantages and Limitations
@@ -614,27 +604,5 @@ The scores are illustrative rather than validated Design 3 results.
 | Two-fan architecture limits propulsion complexity | Fan thrust and lift must be tested experimentally |
 
 ---
-
-## Next Validation Tasks
-
-1. Verify the official competition dimensional constraints.
-2. Confirm available IR sensor quantities.
-3. Measure real component masses.
-4. Verify the center of mass.
-5. Test actual hover clearance.
-6. Measure thrust and acceleration.
-7. Test servo performance.
-8. Measure 90° and 180° turn response.
-9. Validate battery wiring and consumption.
-10. Update the simulation with experimental results.
-
----
-
-## References
-
-- [ENGR290 Design 2 README](https://github.com/dqwed01/ENGR290/blob/Design_R/Design2/README.md)
-- ENGR 290 Technical Support — Fall 2026
-- Design 3 Hovercraft Blueprint
-- Design 3 MATLAB Simulation — `hovercraft3.m`
 
 *Status: Preliminary design and mathematical simulation for the ENGR 290 Preliminary Design Review (PDR). Results require experimental validation.*
