@@ -79,9 +79,9 @@ The HS-311 servo rotates the thrust fan horizontally.
 
 The preliminary simulation assumes:
 
-\[
+$$
 -30^\circ \leq \delta \leq 30^\circ
-\]
+$$
 
 At zero steering angle, the thrust acts along the forward axis.
 
@@ -99,15 +99,15 @@ The mathematical model assumes an 8 mm skirt overhang.
 
 The lift fan generates a pressure difference sufficient to counteract the hovercraft's weight:
 
-\[
+$$
 F_L = P_c A_c
-\]
+$$
 
 For stable hovering:
 
-\[
+$$
 F_L \geq Mg
-\]
+$$
 
 The center of lift is approximated by the centroid of the cushion area.
 
@@ -135,19 +135,19 @@ The IMU measures angular velocity and acceleration, allowing the controller to e
 
 The preliminary model assumes two 2S 450 mAh Li-Po batteries connected in series:
 
-\[
+$$
 V_{battery}=7.4+7.4=14.8\text{ V}
-\]
+$$
 
 The batteries are placed symmetrically at:
 
-\[
+$$
 (x_1,y_1)=(0,+113)\text{ mm}
-\]
+$$
 
-\[
+$$
 (x_2,y_2)=(0,-113)\text{ mm}
-\]
+$$
 
 This arrangement reduces the lateral center-of-mass offset.
 
@@ -199,93 +199,93 @@ The following assumptions are used:
 
 The total hovercraft mass is:
 
-\[
+$$
 M=\sum_{i=1}^{n}m_i
-\]
+$$
 
 Using the preliminary component masses:
 
-\[
+$$
 \boxed{M\approx0.768\text{ kg}}
-\]
+$$
 
 The center of mass is calculated using:
 
-\[
-x_{COM}=\frac{\sum m_i x_i}{M}
-\]
+$$
+x_{COM}=\frac{\sum_i m_i x_i}{M}
+$$
 
-\[
-y_{COM}=\frac{\sum m_i y_i}{M}
-\]
+$$
+y_{COM}=\frac{\sum_i m_i y_i}{M}
+$$
 
 For Design 3:
 
-\[
+$$
 \boxed{x_{COM}\approx+13.8\text{ mm}}
-\]
+$$
 
-\[
+$$
 \boxed{y_{COM}\approx0\text{ mm}}
-\]
+$$
 
 The center of mass lies slightly ahead of the geometric center because of the front thrust fan and servo assembly.
 
 The yaw moment of inertia is:
 
-\[
+$$
 I_{zz}=\sum_i\left[I_{self,i}+m_i\left((x_i-x_{COM})^2+(y_i-y_{COM})^2\right)\right]
-\]
+$$
 
 The preliminary model gives:
 
-\[
+$$
 \boxed{I_{zz}\approx0.00858\text{ kg}\cdot\text{m}^2}
-\]
+$$
 
 ### 2. Geometric Compliance
 
 The recommended chassis dimensions are:
 
-\[
+$$
 W=310\text{ mm},\qquad L=330\text{ mm}
-\]
+$$
 
 Assuming 8 mm skirt overhang on each side:
 
-\[
+$$
 W_o=W+2(8)=326\text{ mm}
-\]
+$$
 
-\[
+$$
 L_o=L+2(8)=346\text{ mm}
-\]
+$$
 
 The conservative diagonal is:
 
-\[
+$$
 D=\sqrt{W_o^2+L_o^2}
-\]
+$$
 
-\[
+$$
 D=\sqrt{326^2+346^2}
-\]
+$$
 
-\[
+$$
 \boxed{D\approx475.4\text{ mm}}
-\]
+$$
 
 Under the reference 480 mm requirement:
 
-\[
+$$
 475.4<480\text{ mm}
-\]
+$$
 
 The estimated dimensional margin is:
 
-\[
+$$
 480-475.4=4.6\text{ mm}
-\]
+$$
 
 The original 330 × 350 mm design, with the same skirt overhang, has a diagonal of approximately 503.7 mm and would exceed this reference limit.
 
@@ -293,53 +293,53 @@ The original 330 × 350 mm design, with the same skirt overhang, has a diagonal 
 
 For hovering equilibrium:
 
-\[
+$$
 F_L=Mg
-\]
+$$
 
 The required cushion pressure is:
 
-\[
+$$
 P_c=\frac{Mg}{A_c}
-\]
+$$
 
 Using the rectangular cushion approximation:
 
-\[
+$$
 A_c=0.310(0.330)=0.1023\text{ m}^2
-\]
+$$
 
-\[
+$$
 P_c=\frac{0.768(9.81)}{0.1023}
-\]
+$$
 
-\[
+$$
 \boxed{P_c\approx73.6\text{ Pa}}
-\]
+$$
 
 The fan is modeled using:
 
-\[
+$$
 Q_{op}=Q_{max}\left(1-\frac{P_c}{P_{max}}\right)
-\]
+$$
 
 The leakage velocity is:
 
-\[
+$$
 v_{esc}=\sqrt{\frac{2P_c}{\rho}}
-\]
+$$
 
 The estimated hover gap is:
 
-\[
+$$
 h=\frac{Q_{op}}{C_d P_{skirt}v_{esc}}
-\]
+$$
 
 The simplified 12 V model predicts:
 
-\[
+$$
 \boxed{h\approx1.87\text{ mm}}
-\]
+$$
 
 This is an idealized leakage-gap estimate, not a verified physical hover height.
 
@@ -347,43 +347,43 @@ This is an idealized leakage-gap estimate, not a verified physical hover height.
 
 The effective fan outlet area is:
 
-\[
+$$
 A_j=\frac{\pi}{4}(d_{tip}^2-d_{hub}^2)
-\]
+$$
 
 The estimated thrust is:
 
-\[
+$$
 F_T=k\rho\frac{Q_T^2}{A_j}
-\]
+$$
 
 Using the reference thrust-fan parameters:
 
-\[
+$$
 \boxed{F_T\approx0.297\text{ N}}
-\]
+$$
 
 For servo angle \(\delta\):
 
-\[
+$$
 F_x=F_T\cos\delta
-\]
+$$
 
-\[
+$$
 F_y=F_T\sin\delta
-\]
+$$
 
 The longitudinal acceleration is:
 
-\[
+$$
 a_x=\frac{F_x-F_{drag}}{M}
-\]
+$$
 
 The yaw torque is:
 
-\[
+$$
 \tau_z=(x_T-x_{COM})F_y-(y_T-y_{COM})F_x
-\]
+$$
 
 The front-mounted thrust fan produces a yaw moment about the center of mass as its steering angle changes.
 
@@ -391,25 +391,25 @@ The front-mounted thrust fan produces a yaw moment about the center of mass as i
 
 Newton's second law gives:
 
-\[
+$$
 M\frac{dv}{dt}=F_T-F_{drag}-F_{skirt}
-\]
+$$
 
 Aerodynamic drag is approximated by:
 
-\[
+$$
 F_{drag}=\frac12\rho C_D A_f v|v|
-\]
+$$
 
 The governing differential equations are:
 
-\[
+$$
 \frac{dx}{dt}=v
-\]
+$$
 
-\[
+$$
 \frac{dv}{dt}=\frac{F_T-\frac12\rho C_D A_fv|v|-F_{skirt}}{M}
-\]
+$$
 
 The MATLAB script integrates these equations numerically to estimate velocity, displacement, and travel time.
 
@@ -419,9 +419,9 @@ A reference straight-line distance of 2.35 m is used for comparison with Design 
 
 Rotational motion is governed by:
 
-\[
+$$
 I_{zz}\frac{d\omega}{dt}=\tau_z-b_\omega\omega
-\]
+$$
 
 where:
 
@@ -432,15 +432,15 @@ where:
 
 Heading is calculated using:
 
-\[
+$$
 \frac{d\psi}{dt}=\omega
-\]
+$$
 
 A simplified heading controller is:
 
-\[
+$$
 \delta=K_p e_\psi+K_i\int e_\psi\,dt-K_d\omega
-\]
+$$
 
 The steering command is limited to ±30° in the preliminary model.
 
@@ -452,9 +452,9 @@ The steering servo rotates the thrust fan and mounting assembly.
 
 Required servo torque is approximated by:
 
-\[
+$$
 \tau_{servo}=I_{assembly}\alpha_{servo}+\tau_{bearing}+\tau_{aero}
-\]
+$$
 
 The servo must provide sufficient torque to rotate the fan assembly while overcoming mechanical and aerodynamic resistance.
 
@@ -466,31 +466,31 @@ The steering angle must also be limited to avoid mechanical interference with ne
 
 Total power consumption is:
 
-\[
+$$
 P_{total}=P_{lift}+P_{thrust}+P_{control}
-\]
+$$
 
 Battery current is estimated by:
 
-\[
+$$
 I_{battery}=\frac{P_{total}}{V_{battery}}
-\]
+$$
 
 Battery runtime is approximated by:
 
-\[
+$$
 t_{run}=\frac{0.8V_{battery}C_{Ah}}{P_{total}}
-\]
+$$
 
 For the preliminary battery arrangement:
 
-\[
+$$
 V_{battery}=14.8\text{ V}
-\]
+$$
 
-\[
+$$
 C=0.45\text{ Ah}
-\]
+$$
 
 The usable capacity factor of 0.8 is an assumption.
 
@@ -500,15 +500,15 @@ Actual runtime must be determined from measured current and the permitted operat
 
 The reference score relationship used in Design 2 is:
 
-\[
+$$
 S=\frac{d}{N_c t}B
-\]
+$$
 
 For Design 2's example score scenario:
 
-\[
+$$
 S=\frac{7.05}{N_c t}(1.15)(1.25)
-\]
+$$
 
 where:
 
@@ -540,6 +540,66 @@ A final numerical competition score cannot yet be calculated reliably because th
 
 ---
 
+## MATLAB Simulation
+
+### MATLAB Source Code
+
+The complete simulation is available here:
+
+[hovercraft3.m](MATLAB/hovercraft3.m)
+
+Six simulation figures are generated for comparison with Design 2.
+
+### Fig 1 — Top view layout
+
+![Fig 1 - Top view layout](Figures/Fig%201%20-%20Top%20view%20layout.png)
+
+This figure illustrates the Design 3 chassis and component locations, including the central lift fan, front-mounted thrust fan, symmetric batteries, sensors, controller, and estimated center of mass.
+
+### Fig 2 — Lift
+
+![Fig 2 - Lift](Figures/Fig%202%20-%20Lift.png)
+
+This figure presents the lift-fan pressure-flow relationship and predicted cushion gap.
+
+### Fig 3 — Thrust vectoring
+
+![Fig 3 - Thrust vectoring](Figures/Fig%203%20-%20Thrust%20vectoring.png)
+
+This figure shows the relationship between servo angle, forward acceleration, lateral force, and angular acceleration.
+
+### Fig 4 — Time responses
+
+![Fig 4 - Time responses](Figures/Fig%204%20-%20Time%20responses.png)
+
+This figure illustrates the simulated distance traveled, speed, heading angle, yaw response, and steering commands.
+
+### Fig 5 — Size trade
+
+![Fig 5 - Size trade](Figures/Fig%205%20-%20Size%20trade.png)
+
+This figure evaluates the relationship between chassis dimensions, geometric compliance, and predicted hover gap.
+
+### Fig 6 — Score
+
+![Fig 6 - Score](Figures/Fig%206%20-%20Score.png)
+
+This figure presents a hypothetical competition-score sensitivity analysis for different completion times and counted-component assumptions.
+
+The scores are illustrative rather than validated Design 3 results.
+
+### Running the MATLAB Simulation
+
+1. Open MATLAB.
+2. Open `Design3/MATLAB/hovercraft3.m`.
+3. Select the recommended or original dimensions.
+4. Run the simulation.
+5. Review the numerical results.
+6. Inspect the six figures.
+7. Replace estimated parameters with measured values.
+
+---
+
 ## Design Advantages and Limitations
 
 | Advantages | Limitations |
@@ -554,4 +614,27 @@ A final numerical competition score cannot yet be calculated reliably because th
 | Two-fan architecture limits propulsion complexity | Fan thrust and lift must be tested experimentally |
 
 ---
+
+## Next Validation Tasks
+
+1. Verify the official competition dimensional constraints.
+2. Confirm available IR sensor quantities.
+3. Measure real component masses.
+4. Verify the center of mass.
+5. Test actual hover clearance.
+6. Measure thrust and acceleration.
+7. Test servo performance.
+8. Measure 90° and 180° turn response.
+9. Validate battery wiring and consumption.
+10. Update the simulation with experimental results.
+
+---
+
+## References
+
+- [ENGR290 Design 2 README](https://github.com/dqwed01/ENGR290/blob/Design_R/Design2/README.md)
+- ENGR 290 Technical Support — Fall 2026
+- Design 3 Hovercraft Blueprint
+- Design 3 MATLAB Simulation — `hovercraft3.m`
+
 *Status: Preliminary design and mathematical simulation for the ENGR 290 Preliminary Design Review (PDR). Results require experimental validation.*
