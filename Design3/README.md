@@ -1,217 +1,557 @@
+
 # Design 3 — Rounded-Front Hovercraft with Front Vectored Thrust
 
 ## Description
 
 ### Technical Overview
-Design 3 is a foam-deck hovercraft with a **rounded nose, square rear corners**, one central lift fan, and **one front-mounted thrust fan controlled by a steering servo**. Two identical Li-Po batteries sit symmetrically on the left and right of the lift fan. A controller at the rear and an IMU behind the lift fan complete the main layout. The concept drawing includes **three front IR sensors** and one front ultrasonic (US) sensor.
 
-The objective is to obtain adequate cushion lift, forward propulsion, obstacle sensing, and repeatable turns within the ENGR 290 competition's dimensional and component constraints. In contrast to Design 2, which has a **rear-mounted** vectored thrust fan, Design 3 mounts propulsion **ahead of its center of mass**. Its steering dynamics and weight distribution must therefore be checked independently.
+Design 3 is a foam-deck hovercraft featuring a rounded front, square rear corners, one central lift fan, and one front-mounted thrust fan controlled by a servo motor. Two Li-Po batteries are positioned symmetrically on either side of the lift fan to improve lateral stability.
 
-| Parameter | Original drawing | Simulation baseline |
+The design also incorporates an ultrasonic sensor (US), three infrared sensors (IR), an inertial measurement unit (IMU), and a controller located toward the rear.
+
+Unlike Design 2, which uses a rear-mounted thrust fan, Design 3 positions the propulsion system toward the front. This configuration changes the center of mass and steering dynamics and therefore requires an independent mathematical evaluation.
+
+The objective is to develop a lightweight, stable hovercraft capable of navigating the ENGR 290 competition course while satisfying the dimensional, component, and obstacle-clearance requirements.
+
+| Parameter | Original design | Recommended simulation |
 |---|---:|---:|
-| Foam deck, width × length | 330 × 350 mm | **310 × 330 mm** |
-| Estimated skirt overhang (each side) | 8 mm | 8 mm |
-| Bounding dimensions with skirt | 346 × 366 mm | **326 × 346 mm** |
-| Bounding-box diagonal | 503.7 mm | **475.4 mm** |
-| Reference diagonal limit (from Design 2 README) | 480 mm | 480 mm |
-| Geometric check against that limit | **Fail** | **Pass, ~4.6 mm margin** |
-| Mass | Not measured | **~0.768 kg, model estimate** |
-| IR sensor count | 3 illustrated | 3 modeled; availability unconfirmed |
+| Foam deck | 330 × 350 mm | 310 × 330 mm |
+| Skirt overhang | 8 mm | 8 mm |
+| Overall dimensions | 346 × 366 mm | 326 × 346 mm |
+| Bounding diagonal | 503.7 mm | 475.4 mm |
+| Reference diagonal limit | 480 mm | 480 mm |
+| Estimated mass | Not measured | 0.768 kg |
+| Lift fans | 1 | 1 |
+| Thrust fans | 1 | 1 |
+| Steering servos | 1 | 1 |
+| IR sensors | 3 proposed | 3 proposed |
 
-**Important:** The 480 mm limit and the reference course geometry are carried over from Design 2's documentation. Confirm the official competition rules and whether any attachments protrude beyond the defined envelope. A rectangular bounding diagonal is conservative for the rounded nose but does not guarantee compliance if a fan, bracket, wire, or skirt extends farther.
+**Note:** The 480 mm diagonal limit is based on Design 2's competition reference. Actual compliance must be verified against the official competition rules.
 
 ### Hovercraft Architecture and Subsystems
-A body-fixed coordinate system is used: **+x points toward the rounded front**, **+y points left**, and the origin is at the deck's geometric center. In the MATLAB layout, the lift fan is centered at (0, 0) mm; the propulsion fan and servo pivot are near (+115, 0) mm. The left and right batteries are at (0, +113) and (0, −113) mm. The rear controller is at (−120, 0) mm and the IMU at (−92, 0) mm. The three IR sensors and US module face or occupy the front of the craft as illustrated, although physical clearances and sensing directions remain to be finalized.
+
+The chassis is manufactured from lightweight foam board with a rounded front and rectangular rear.
+
+The coordinate system is defined with its origin at the geometric center of the deck:
+
+- **+x:** Forward direction
+- **+y:** Left side
+- **−x:** Rear direction
+- **−y:** Right side
+
+The lift fan is positioned at the center to generate the air cushion.
+
+The thrust fan and steering servo are positioned toward the front, while the controller is located at the rear.
+
+Two batteries are placed symmetrically beside the lift fan to balance the lateral mass distribution.
+
+The IMU is located between the lift fan and the controller, close to the centerline.
 
 ### Propulsion and Directional Control
-- **Lift:** One Delta **AFB1212SH**, provisionally selected for relatively high static pressure. The model uses **107.1 Pa maximum static pressure and 113.1 CFM free-air flow at 12 V**, based on Design 2's reference parameters. The actual operating point depends on pressure losses, the skirt, and the fan curve.
-- **Thrust:** One Sunon **MEC0251V1-000U-A99**, provisionally selected for its airflow-to-mass characteristics. Its exhaust must point **toward the rear** to move the craft toward its rounded nose.
-- **Steering:** One **HS-311** servo rotates the thrust direction in the horizontal plane. The initial MATLAB simulation limits steering to **±30°** as a placeholder, not a verified mechanical limit. Because the fan is mounted in front of the center of mass, its lateral thrust generates a yaw moment from the **forward lever arm**. A secure bracket must keep the assembly clear of the deck, other sensors, and its own safety guard across the full rotation.
+
+**Lift fan — Delta AFB1212SH**
+
+The Delta AFB1212SH is provisionally selected because of its relatively high static pressure.
+
+Reference characteristics:
+
+- Maximum static pressure: 107.1 Pa at 12 V
+- Maximum airflow: 113.1 CFM at 12 V
+- Estimated mass: 198 g
+
+Static pressure is particularly important because the lift fan must maintain sufficient pressure beneath the hovercraft to support its weight.
+
+**Thrust fan — Sunon MEC0251V1-000U-A99**
+
+The thrust fan is selected for its airflow-to-mass characteristics.
+
+Reference characteristics:
+
+- Maximum airflow: 108.2 CFM
+- Estimated mass: 162 g
+- Function: Forward propulsion and steering
+
+The fan exhaust is directed toward the rear to produce forward motion.
+
+**Steering — HS-311 Servo**
+
+The HS-311 servo rotates the thrust fan horizontally.
+
+The preliminary simulation assumes:
+
+\[
+-30^\circ \leq \delta \leq 30^\circ
+\]
+
+At zero steering angle, the thrust acts along the forward axis.
+
+At nonzero steering angles, the thrust is divided into longitudinal and lateral components, producing forward acceleration and rotational motion.
+
+Because the thrust fan is positioned in front of the center of mass, the steering torque has a different sign from Design 2's rear-mounted configuration.
 
 ### Skirt Aerodynamics and Stability
-The assumed lightweight flexible skirt retains air under the deck and extends about 8 mm beyond the foam on each side. The model approximates the rounded deck as a rectangular cushion for area and perimeter calculations, so its pressure and hover-gap estimates need correction after the actual shape and skirt are built. The lift fan's position is **not** automatically the center of lift; with a symmetric cushion, the lift resultant is approximately at the cushion's geometric centroid. The forward fan and rear controller create a longitudinal mass balance that must be measured.
+
+A lightweight flexible skirt is attached around the chassis perimeter.
+
+The skirt retains pressurized air beneath the deck, reducing friction with the floor.
+
+The mathematical model assumes an 8 mm skirt overhang.
+
+The lift fan generates a pressure difference sufficient to counteract the hovercraft's weight:
+
+\[
+F_L = P_c A_c
+\]
+
+For stable hovering:
+
+\[
+F_L \geq Mg
+\]
+
+The center of lift is approximated by the centroid of the cushion area.
+
+Maintaining the center of mass close to the center of lift helps reduce unwanted pitching and improves stability.
 
 ### Autonomous Navigation Suite
 
-| Sensor | Planned position | Intended purpose | Limitation |
-|---|---|---|---|
-| HC-SR04 US | Front, centered, above/in front of the thrust-fan support | Forward obstacle/end-wall distance | Avoid obstruction, airflow vibration, and fan interference |
-| IR front-left | Rounded front, left side | Nearby wall/obstacle detection | Verify range and alignment |
-| IR front-center | Rounded front, centered | Forward proximity detection | Possible sensing overlap with US |
-| IR front-right | Rounded front, right side | Nearby wall/obstacle detection | Verify range and alignment |
-| GY-521 / MPU-6050 IMU | On centerline, behind lift fan | Yaw rate, tilt, heading estimation | Gyro heading drifts; requires calibration |
+| Sensor | Location | Function |
+|---|---|---|
+| HC-SR04 ultrasonic | Front, above thrust-fan support | Forward obstacle detection |
+| IR sensor 1 | Front-left | Proximity detection |
+| IR sensor 2 | Front-center | Forward proximity detection |
+| IR sensor 3 | Front-right | Proximity detection |
+| GY-521 MPU-6050 | Between lift fan and controller | Heading, angular velocity and acceleration |
 
-**Competition-task caveat:** Design 2's README uses a **side-facing IR** for wall following/exit detection and an **upward-facing IR** for overhead-bar detection. The three forward-looking IR sensors in Design 3's sketch do **not** automatically satisfy those functions. Before freezing the sensor plan, verify allowed sensor quantities and reorient one sensor upward and/or one sideways if required by the course. The initial materials screenshot listed only **one** IR sensor.
+The ultrasonic sensor measures the distance to obstacles ahead of the craft.
+
+The IR sensors provide shorter-range proximity measurements.
+
+The IMU measures angular velocity and acceleration, allowing the controller to estimate orientation and correct unwanted rotation.
+
+**Important:** The illustrated three-IR configuration is provisional. The available number of sensors and the required side-facing or upward-facing sensing for competition tasks must be confirmed.
 
 ### Power Distribution and Mass Balancing
-The simulation assumes **two 2S 450 mAh packs in series** (14.8 V nominal) and models fans at **12 V**, but this is **not an approved wiring diagram**. Confirm with the course technician how the chosen controller distributes voltage and PWM, the battery connectors, fan ratings, and the approved series connection. Route power **through the controller** and never connect the batteries directly to a fan. Use protective fan covers and inspect Li-Po packs before operation.
+
+The preliminary model assumes two 2S 450 mAh Li-Po batteries connected in series:
+
+\[
+V_{battery}=7.4+7.4=14.8\text{ V}
+\]
+
+The batteries are placed symmetrically at:
+
+\[
+(x_1,y_1)=(0,+113)\text{ mm}
+\]
+
+\[
+(x_2,y_2)=(0,-113)\text{ mm}
+\]
+
+This arrangement reduces the lateral center-of-mass offset.
+
+Fan supply voltages and battery connections must be verified with the laboratory technician. The batteries must not be connected directly to the fans.
 
 ---
 
 ## Components
 
-Values below are the **current `hovercraft3.m` simulation inputs**, not a finalized bill of materials. Coordinate values are from the deck center; **mass estimates must be replaced with measured values**.
+The following table contains preliminary simulation values. Component masses and positions should be verified during assembly.
 
-| # | Component | Model or assumption | Qty | Model mass (g) | Position (x, y) mm | Purpose |
+| # | Component | Model | Qty | Mass (g) | Position (x,y) mm | Purpose |
 |---|---|---|---:|---:|---|---|
-| 1 | Lift fan | Delta AFB1212SH | 1 | 198 | (0, 0) | Cushion pressure |
-| 2 | Thrust fan | Sunon MEC0251V1-000U-A99 | 1 | 162 | (+115, 0) | Forward and vectored thrust |
-| 3 | Steering servo | HS-311 | 1 | 43 | (+115, 0) | Fan-direction control |
-| 4 | Thrust bracket and guards | Custom | 1 set | 20 est. | (+115, 0) | Safe fan mounting |
-| 5 | Batteries | 2S 450 mAh Li-Po | 2 | 28 each est. | (0, ±113) | Energy, symmetric loading |
-| 6 | Controller and enclosure | ENGR 290 controller | 1 | 150 est. | (−120, 0) | Motor/sensor control |
-| 7 | Ultrasonic sensor | HC-SR04 | 1 | 8.5 est. | (+145, 0) | Front distance |
-| 8 | IR sensors | Model to be confirmed | 3 planned | 5 each est. | (+151, 0), (+118, ±110) | Proximity |
-| 9 | IMU | GY-521 (MPU-6050) | 1 | 5 est. | (−92, 0) | Attitude and yaw |
-| 10 | Skirt | Flexible lightweight material | 1 | 20 est. | Perimeter | Air cushion |
-| 11 | Wiring/glue/mounting | Miscellaneous | — | 30 est. | Distributed | Assembly |
-| 12 | Foam deck (net of fan hole) | 20 mm foam, 33 kg/m³ assumed | 1 | ~60.1 est. | (0, 0) | Structure |
-| | **Total model estimate** | | | **~767.6 g** | | Not weighed |
+| 1 | Lift fan | Delta AFB1212SH | 1 | 198 | (0,0) | Air cushion |
+| 2 | Thrust fan | Sunon MEC0251V1 | 1 | 162 | (+115,0) | Propulsion |
+| 3 | Servo motor | HS-311 | 1 | 43 | (+115,0) | Steering |
+| 4 | Fan bracket and guards | Custom | 1 set | 20 est. | (+115,0) | Mounting and protection |
+| 5 | Batteries | 2S 450 mAh Li-Po | 2 | 28 each | (0,±113) | Power |
+| 6 | Controller | ENGR 290 controller | 1 | 150 est. | (−120,0) | Processing and control |
+| 7 | Ultrasonic sensor | HC-SR04 | 1 | 8.5 | (+145,0) | Distance measurement |
+| 8 | IR sensors | Model TBD | 3 proposed | 5 each | Front | Proximity sensing |
+| 9 | IMU | GY-521 MPU-6050 | 1 | 5 | (−92,0) | Orientation |
+| 10 | Skirt | Flexible polyethylene | 1 | 20 | Perimeter | Cushion |
+| 11 | Wiring and mounting | Miscellaneous | — | 30 | Distributed | Assembly |
+| 12 | Foam deck | Lightweight foam | 1 | 60.1 | (0,0) | Chassis |
+| | **Estimated total** | | | **767.6 g** | | |
 
-**Component-score note:** Do not transfer Design 2's reported `N_c = 6` to Design 3. The competition's counting method and allowance for three IR sensors must be checked before claiming a score. No part choice or quantity is guaranteed available until confirmed with the laboratory.
+The number of counted competition components must be evaluated using the official scoring rules.
 
 ---
 
 ## Mathematical Evaluation and Modeling
 
 ### Modeling Assumptions
-- The foam deck is approximated as a rectangular plate with a circular fan cutout. Rounded corners are not subtracted from the mass or cushion area.
-- Components are represented as concentrated masses plus approximate individual rectangular moments of inertia.
-- The hovercraft behaves as a rigid planar body; vertical bounce, skirt deformation, and wall collisions are not simulated.
-- The lift fan is represented by a **linear pressure–flow curve**; it is a first estimate, not measured fan performance.
-- Vectored thrust is estimated from a momentum-flow approximation with an assumed installation factor.
-- Straight-line motion includes quadratic aerodynamic drag and a small residual skirt drag; the 2D steering test uses linear damping.
-- All estimated values must be calibrated with physical tests.
+
+The following assumptions are used:
+
+1. The hovercraft is modeled as a rigid body.
+2. Components are approximated as concentrated masses.
+3. The deck is approximated as rectangular for the first-order cushion model.
+4. The lift fan follows an approximately linear pressure-flow relationship.
+5. Air density is assumed constant at 1.204 kg/m³.
+6. Aerodynamic drag is included in the straight-line simulation.
+7. Residual skirt drag is approximated.
+8. Steering is modeled as vectored thrust.
+9. The MATLAB simulation uses estimated parameters that require experimental calibration.
 
 ### 1. Mass Properties
 
-The estimated total mass and center of mass are
+The total hovercraft mass is:
 
-$$M=\sum_i m_i, \qquad x_{COM}=\frac{\sum_i m_i x_i}{M},\qquad y_{COM}=\frac{\sum_i m_i y_i}{M}.$$
+\[
+M=\sum_{i=1}^{n}m_i
+\]
 
-For the nominal 310 × 330 mm model, the current inputs give approximately **M = 0.768 kg**, **xCOM = +13.8 mm**, and **yCOM ≈ 0 mm**. Thus, the mass center is offset **toward the front**, rather than exactly over the cushion center.
+Using the preliminary component masses:
 
-$$I_{zz}=\sum_i \left[I_{self,i}+m_i\left((x_i-x_{COM})^2+(y_i-y_{COM})^2\right)\right].$$
+\[
+\boxed{M\approx0.768\text{ kg}}
+\]
+
+The center of mass is calculated using:
+
+\[
+x_{COM}=\frac{\sum m_i x_i}{M}
+\]
+
+\[
+y_{COM}=\frac{\sum m_i y_i}{M}
+\]
+
+For Design 3:
+
+\[
+\boxed{x_{COM}\approx+13.8\text{ mm}}
+\]
+
+\[
+\boxed{y_{COM}\approx0\text{ mm}}
+\]
+
+The center of mass lies slightly ahead of the geometric center because of the front thrust fan and servo assembly.
+
+The yaw moment of inertia is:
+
+\[
+I_{zz}=\sum_i\left[I_{self,i}+m_i\left((x_i-x_{COM})^2+(y_i-y_{COM})^2\right)\right]
+\]
+
+The preliminary model gives:
+
+\[
+\boxed{I_{zz}\approx0.00858\text{ kg}\cdot\text{m}^2}
+\]
 
 ### 2. Geometric Compliance
 
-For a conservative rectangular envelope including skirt overhang $s$:
+The recommended chassis dimensions are:
 
-$$W_o=W+2s,\qquad L_o=L+2s,\qquad D=\sqrt{W_o^2+L_o^2}.$$
+\[
+W=310\text{ mm},\qquad L=330\text{ mm}
+\]
 
-For the baseline: $D=\sqrt{326^2+346^2}=\mathbf{475.4\ mm}$. For the original drawing plus the same overhang: $D=\sqrt{346^2+366^2}=\mathbf{503.7\ mm}$.
+Assuming 8 mm skirt overhang on each side:
 
-### 3. Lift and Cushion
+\[
+W_o=W+2(8)=326\text{ mm}
+\]
 
-$$A_c\approx WL,\qquad p_c=\frac{Mg}{A_c}.$$
+\[
+L_o=L+2(8)=346\text{ mm}
+\]
 
-For the 310 × 330 mm deck, the rectangular-area approximation gives $A_c=0.1023\ \text{m}^2$ and $p_c\approx73.6\ \text{Pa}$.
+The conservative diagonal is:
 
-$$Q_{op}=Q_{free}\max\!\left(0,1-\frac{p_c}{p_{max}}\right),$$
+\[
+D=\sqrt{W_o^2+L_o^2}
+\]
 
-$$v_{leak}=\sqrt{\frac{2p_c}{\rho}},\qquad h=\frac{Q_{op}}{C_d P_{skirt}v_{leak}}.$$
+\[
+D=\sqrt{326^2+346^2}
+\]
 
-The resulting $h$ is an **idealized uniform leakage gap**, **not a guaranteed height above a 3 mm obstacle**. It does not account for compressed skirt geometry or fan inlet losses.
+\[
+\boxed{D\approx475.4\text{ mm}}
+\]
+
+Under the reference 480 mm requirement:
+
+\[
+475.4<480\text{ mm}
+\]
+
+The estimated dimensional margin is:
+
+\[
+480-475.4=4.6\text{ mm}
+\]
+
+The original 330 × 350 mm design, with the same skirt overhang, has a diagonal of approximately 503.7 mm and would exceed this reference limit.
+
+### 3. Lift
+
+For hovering equilibrium:
+
+\[
+F_L=Mg
+\]
+
+The required cushion pressure is:
+
+\[
+P_c=\frac{Mg}{A_c}
+\]
+
+Using the rectangular cushion approximation:
+
+\[
+A_c=0.310(0.330)=0.1023\text{ m}^2
+\]
+
+\[
+P_c=\frac{0.768(9.81)}{0.1023}
+\]
+
+\[
+\boxed{P_c\approx73.6\text{ Pa}}
+\]
+
+The fan is modeled using:
+
+\[
+Q_{op}=Q_{max}\left(1-\frac{P_c}{P_{max}}\right)
+\]
+
+The leakage velocity is:
+
+\[
+v_{esc}=\sqrt{\frac{2P_c}{\rho}}
+\]
+
+The estimated hover gap is:
+
+\[
+h=\frac{Q_{op}}{C_d P_{skirt}v_{esc}}
+\]
+
+The simplified 12 V model predicts:
+
+\[
+\boxed{h\approx1.87\text{ mm}}
+\]
+
+This is an idealized leakage-gap estimate, not a verified physical hover height.
 
 ### 4. Thrust and Thrust Vectoring
 
-$$A_j=\frac{\pi}{4}(d_{tip}^2-d_{hub}^2),\qquad F_T\approx k\rho\frac{Q_T^2}{A_j}.$$
+The effective fan outlet area is:
 
-For servo deflection $\delta$:
+\[
+A_j=\frac{\pi}{4}(d_{tip}^2-d_{hub}^2)
+\]
 
-$$F_x=F_T\cos\delta,\qquad F_y=F_T\sin\delta.$$
+The estimated thrust is:
 
-Because Design 3's propulsion fan is **in front of** the mass center:
+\[
+F_T=k\rho\frac{Q_T^2}{A_j}
+\]
 
-$$\tau_z=(x_T-x_{COM})F_y-(y_T-y_{COM})F_x.$$
+Using the reference thrust-fan parameters:
 
-The **sign of yaw torque** is different from a rear-mounted fan using the same deflection convention. Control directions must be checked on the real hardware.
+\[
+\boxed{F_T\approx0.297\text{ N}}
+\]
 
-### 5. Straight-Line Motion
+For servo angle \(\delta\):
 
-$$M\frac{dv}{dt}=F_T-\tfrac12\rho C_D A_f v|v|-F_{skirt},\qquad \frac{dx}{dt}=v.$$
+\[
+F_x=F_T\cos\delta
+\]
 
-The code integrates these equations numerically to estimate the time and speed over the **2.35 m reference distance** used by Design 2. This is not a measured track result.
+\[
+F_y=F_T\sin\delta
+\]
 
-### 6. Rotational and Heading Dynamics
+The longitudinal acceleration is:
 
-$$I_{zz}\frac{d\omega}{dt}=\tau_z-b_\omega\omega,\qquad\frac{d\psi}{dt}=\omega.$$
+\[
+a_x=\frac{F_x-F_{drag}}{M}
+\]
 
-The illustrative controller applies a bounded steering command using heading error, integral correction, and yaw-rate damping:
+The yaw torque is:
 
-$$\delta=\operatorname{sat}_{\pm30^\circ}\left(K_p e_\psi+K_i\int e_\psi\,dt-K_d\omega\right).$$
+\[
+\tau_z=(x_T-x_{COM})F_y-(y_T-y_{COM})F_x
+\]
 
-In the sample simulation, the commanded heading steps from **0° to 90° at t = 3 s**. This is a steering demonstration, **not a complete lane-following/U-turn algorithm**.
+The front-mounted thrust fan produces a yaw moment about the center of mass as its steering angle changes.
 
-### 7. Electrical Power and Runtime
+### 5. Linear Dynamics
 
-$$P_{tot}=P_{lift}+P_{thrust}+P_{control},\qquad I_{pack}\approx\frac{P_{tot}}{V_{pack}}.$$
+Newton's second law gives:
 
-$$t_{run}\approx\frac{0.8V_{pack}C_{Ah}}{P_{tot}}.$$
+\[
+M\frac{dv}{dt}=F_T-F_{drag}-F_{skirt}
+\]
 
-The 80% capacity factor, constant power demand, 14.8 V pack and 450 mAh capacity are assumptions. Measured current, actual fan duty cycle and safe low-voltage shutdown govern practical runtime.
+Aerodynamic drag is approximated by:
 
-### 8. Competition Performance and Score
+\[
+F_{drag}=\frac12\rho C_D A_f v|v|
+\]
 
-Unlike Design 2's README, **this model does not yet predict a full competition time or final score**. It lacks a validated obstacle-clearance model, programmed wall-following, bar detection, path planning, turn completion logic, and a confirmed counted-component total. Once the rules and measurements are available, a scoring section can be added with explicit assumptions.
+The governing differential equations are:
+
+\[
+\frac{dx}{dt}=v
+\]
+
+\[
+\frac{dv}{dt}=\frac{F_T-\frac12\rho C_D A_fv|v|-F_{skirt}}{M}
+\]
+
+The MATLAB script integrates these equations numerically to estimate velocity, displacement, and travel time.
+
+A reference straight-line distance of 2.35 m is used for comparison with Design 2.
+
+### 6. Rotational Dynamics
+
+Rotational motion is governed by:
+
+\[
+I_{zz}\frac{d\omega}{dt}=\tau_z-b_\omega\omega
+\]
+
+where:
+
+- \(I_{zz}\) is yaw moment of inertia.
+- \(\omega\) is angular velocity.
+- \(\tau_z\) is steering torque.
+- \(b_\omega\) is rotational damping.
+
+Heading is calculated using:
+
+\[
+\frac{d\psi}{dt}=\omega
+\]
+
+A simplified heading controller is:
+
+\[
+\delta=K_p e_\psi+K_i\int e_\psi\,dt-K_d\omega
+\]
+
+The steering command is limited to ±30° in the preliminary model.
+
+MATLAB simulates a heading command changing from 0° to 90° at \(t=3\) seconds.
+
+### 7. Servo Check
+
+The steering servo rotates the thrust fan and mounting assembly.
+
+Required servo torque is approximated by:
+
+\[
+\tau_{servo}=I_{assembly}\alpha_{servo}+\tau_{bearing}+\tau_{aero}
+\]
+
+The servo must provide sufficient torque to rotate the fan assembly while overcoming mechanical and aerodynamic resistance.
+
+The HS-311 servo is the initial candidate, subject to torque verification.
+
+The steering angle must also be limited to avoid mechanical interference with nearby components.
+
+### 8. Power Budget
+
+Total power consumption is:
+
+\[
+P_{total}=P_{lift}+P_{thrust}+P_{control}
+\]
+
+Battery current is estimated by:
+
+\[
+I_{battery}=\frac{P_{total}}{V_{battery}}
+\]
+
+Battery runtime is approximated by:
+
+\[
+t_{run}=\frac{0.8V_{battery}C_{Ah}}{P_{total}}
+\]
+
+For the preliminary battery arrangement:
+
+\[
+V_{battery}=14.8\text{ V}
+\]
+
+\[
+C=0.45\text{ Ah}
+\]
+
+The usable capacity factor of 0.8 is an assumption.
+
+Actual runtime must be determined from measured current and the permitted operating voltage.
+
+### 9. Course Time and Score
+
+The reference score relationship used in Design 2 is:
+
+\[
+S=\frac{d}{N_c t}B
+\]
+
+For Design 2's example score scenario:
+
+\[
+S=\frac{7.05}{N_c t}(1.15)(1.25)
+\]
+
+where:
+
+- \(d\): Reference travel distance.
+- \(N_c\): Number of counted components.
+- \(t\): Course completion time.
+- \(B\): Combined scoring multiplier.
+
+The Design 3 simulation examines score sensitivity for different completion times and component counts.
+
+A final numerical competition score cannot yet be calculated reliably because the component count, complete course navigation, turning times, and obstacle performance remain unverified.
 
 ### Summary of Preliminary Results
 
-| Quantity | Baseline design status |
-|---|---|
-| Deck | 310 × 330 mm proposed |
-| With modeled skirt | 326 × 346 mm |
+| Quantity | Design 3 |
+|---|---:|
+| Recommended deck | 310 × 330 mm |
+| Overall with skirt | 326 × 346 mm |
 | Conservative diagonal | 475.4 mm |
-| Estimated mass | 0.768 kg |
-| Estimated center of mass | (+13.8, 0) mm |
-| Required ideal cushion pressure | 73.6 Pa |
-| Lift, thrust, travel time, yaw response | Computed by `hovercraft3.m`; must be validated |
+| Total estimated mass | 0.768 kg |
+| Center of mass | (+13.8, 0) mm |
+| Yaw moment of inertia | 0.00858 kg·m² |
+| Cushion pressure | 73.6 Pa |
+| Estimated hover gap at 12 V | 1.87 mm |
+| Estimated static thrust | 0.297 N |
 | Steering range | ±30° assumed |
-| Battery arrangement | Two 2S packs in series, **subject to technician approval** |
+| Battery voltage | 14.8 V assumed |
 | Competition score | Not yet determined |
 
 ---
 
-## MATLAB Simulation
+## Design Advantages and Limitations
 
-### File
-`MATLAB/hovercraft3.m` (or `hovercraft3.m` if the file is stored beside this README).
-
-### Instructions
-1. Open MATLAB **R2016b or newer**.
-2. Open `hovercraft3.m` and run it. No additional toolboxes are required.
-3. Keep `useRecommended = true` for the reduced deck; set it to `false` to analyze the original **330 × 350 mm** drawing.
-4. Check the Command Window for **geometry, mass/COM, lift, thrust, straight-run and battery** calculations.
-5. Inspect the **six generated figures**: top view; lift fan and hover-gap sensitivity; thrust and steering acceleration; straight run; 2D heading response; geometry study.
-6. Replace all assumed masses, pressure–flow properties, mounting coordinates, skirt coefficients, thrust efficiency, damping and power consumption with measurements before reporting verified results.
-
-**Known model limitations:** Figure 1 uses a simplified rounded rectangle rather than the exact front-only rounded geometry. Components may overlap geometrically in this initial plot (especially the centrally located US/IR and the front thrust assembly). The thrust fan's rotated swept envelope, skirt behavior, sensor visibility, Li-Po electrical compatibility, and full course navigation remain to be checked physically.
-
-## Design Advantages and Risks
-
-| Advantages | Trade-offs / verification needed |
+| Advantages | Limitations |
 |---|---|
-| Central lift fan offers a simple cushion layout | Rounded corners and skirt leaks affect actual cushion area |
-| Symmetric batteries minimize sideways COM error | Heavy forward thrust unit pulls COM toward the nose |
-| Front thrust vectoring enables yaw control in principle | Different torque direction than rear steering; potential nose swing and bracket interference |
-| Wide front sensor field | Three IR sensors may not be available or permitted; insufficient upward sensing for a bar |
-| Reduced deck can fit the reference diagonal | Only a few millimeters of assumed margin; attachments must be included |
-| Single lift + single thrust fan minimizes propulsion complexity | Actual lift margin and thrust force must be measured |
+| Central lift fan provides simple cushion generation | Actual cushion performance depends on skirt geometry |
+| Symmetric batteries improve lateral mass balance | Front thrust assembly shifts center of mass forward |
+| Front vectored thrust permits directional control | Steering sign differs from a rear-mounted fan |
+| Rounded front may reduce corner interference | Reduced cushion area must be accounted for |
+| IMU supports heading stabilization | Sensor drift and calibration errors |
+| Multiple IR sensors provide wider proximity coverage | Sensor quantity and availability must be confirmed |
+| Reduced dimensions improve geometric compliance | Limited dimensional margin |
+| Two-fan architecture limits propulsion complexity | Fan thrust and lift must be tested experimentally |
 
-## Next Validation Tasks
-
-- Confirm the **official dimensional limits**, course tasks, and component-count rules.
-- Confirm the **number and models of IR sensors** issued to the team and decide which face forward, sideways, and upward.
-- Weigh every component and measure **center of mass** with the two packs installed.
-- Measure the selected **lift fan pressure/flow**, **thrust force**, hover clearance, and power draw at permitted supply settings.
-- Verify fan protection, controller-side battery wiring, and mechanical sweep of the **front servo-driven propulsion unit**.
-- Measure 90°/180° turning behavior; tune the MATLAB damping and heading controller before implementing real navigation.
-
-## References
-
-- [ENGR290 Design 2 README](https://github.com/dqwed01/ENGR290/blob/Design_R/Design2/README.md) — organization and preliminary reference values.
-- `290_tech_intro_F2026` — course technical support document, available fans, batteries, servos, sensors, controller connections, and safety restrictions.
-- Design 3 top/front blueprint provided by the team.
-
-*Status: preliminary engineering model for PDR development; not a tested final design.*
-
+---
+*Status: Preliminary design and mathematical simulation for the ENGR 290 Preliminary Design Review (PDR). Results require experimental validation.*
