@@ -5,9 +5,7 @@
 
 ### Technical Overview
 
-Design 3 is an ENGR 290 hovercraft based on the SolidWorks isometric model and dimensioned assembly drawing.
-
-Unlike Design 2, which uses a rectangular chassis and a rear-mounted thrust fan, Design 3 features a **rounded, near-oval chassis with a front-mounted vectored thrust fan**.
+Design 3 features a **rounded, near-oval chassis with a front-mounted vectored thrust fan**.
 
 The design consists of:
 
