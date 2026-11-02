@@ -700,17 +700,6 @@ This figure compares five hypothetical sensor configurations (A–E) for two fin
 
 The score calculations depend on assumed times, bonuses, and counted components, so they are not final competition predictions.
 
-### Running the MATLAB Simulation
-
-1. Open MATLAB.
-2. Navigate to `Design3/MATLAB`.
-3. Open `hovercraft3.m`.
-4. Run the script.
-5. Review the Command Window calculations.
-6. Inspect the six generated figures.
-7. Replace assumed parameters with actual measured values.
-8. Upload the exported PNG figures into `Design3/Figures`.
-
 ---
 
 ## Advantages, Limitations and Recommendations
@@ -726,44 +715,5 @@ The score calculations depend on assumed times, bonuses, and counted components,
 | Symmetric batteries | Improves lateral mass balance | Final positions need verification |
 | Rear controller enclosure | Protects electronics and simplifies wiring organization | Added weight and cooling requirements |
 
-### Recommended Improvements
-
-**1. Validate lift performance**
-
-Test actual hover clearance and the ability to cross obstacles of 1, 2 and 3 mm.
-
-**2. Verify center of mass**
-
-Use SolidWorks mass properties and physical measurements to locate the center of mass.
-
-**3. Optimize the IMU placement**
-
-Mount the IMU rigidly near the center of mass, away from excessive vibration.
-
-**4. Test ultrasonic reliability**
-
-Check whether the sensor receives stable readings when the thrust and lift fans operate.
-
-**5. Validate turning performance**
-
-Measure 90° and 180° turns and compare them with the MATLAB predictions.
-
-**6. Confirm competition compliance**
-
-Verify component allocation, physical dimensions, measurement rules, and sensor requirements.
-
-**7. Update the MATLAB simulation**
-
-Replace provisional masses, fan data, aerodynamic coefficients, and control parameters with experimental measurements.
-
----
-
-## References
-
-- [ENGR 290 Design 2 README](https://github.com/dqwed01/ENGR290/blob/Design_R/Design2/README.md)
-- ENGR 290 Technical Support — Fall 2026
-- Design 3 SolidWorks Isometric Model
-- Design 3 SolidWorks Assembly Drawing
-- [Design 3 MATLAB Simulation](MATLAB/hovercraft3.m)
 
 *Status: Preliminary Design Review (PDR). All calculated performance results are estimates requiring experimental validation.*
