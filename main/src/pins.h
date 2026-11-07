@@ -13,6 +13,6 @@
 #define US2_TRIG PB3
 
 //Servo Motor Pins
-#define SERVO1_CTRL PB2
+#define SERVO1_CTRL PB1
 
 #endif

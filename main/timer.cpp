@@ -9,61 +9,70 @@
 #include "src/pins.h"
 #include "src/global.h"
 
-uint16_t isr_period = 0;
+#ifdef DEBUGGING
+static char debug_message[64] = {0};
+#endif
 
-ISR(TIMER2_COMPB_vect){ //Triggers every 125us
-    OCR2B += 251;
-    if(blink_enabled){
-        if(++isr_period >= 6000){
-            isr_period = 0;
-            DIGITAL_TOGGLE(PORTB, PB5);
-        }
-    }
-    else{
-        isr_period = 0; //Prevent shorter first toggle
-    }
+static volatile uint32_t ms_ticks = 0;
+
+ISR(TIMER0_COMPB_vect){ //Triggers every 1ms (250 ticks * 4 us at prescaler 64)
+    OCR0B += 250;
+    ms_ticks++;
+}
+
+uint32_t timer_millis(){
+    uint8_t sreg = SREG;
+    cli();                  // 32-bit read is not atomic on AVR
+    uint32_t ms = ms_ticks;
+    SREG = sreg;
+    return ms;
 }
 
 
 void timer_init(){
-    TCCR0B = 0; //Stop Timer
-    TIMSK0 = 0; //No Interrupt Timers
-    TCCR0A = 0; //Disconnect OC0x pins and use Normal Waveform Generator
+    //Timer 0
+    //ISR
+    //Stop Timer
+    TCCR0B &= 0xF8;
+    OCR0B = 250;
+    //clear stale flags
+    TIFR0 = ~1;
+    //Interrupt on OCR2B Match
+    TIMSK0 = (1 << OCIE0B);
+
+    //Normal Mode
+    TCCR0A = 0;
     TIFR0 = ~0; // Clear all interrupt flags
 
-    //Timer 2 uses PWM on OCR2A and ISR on OCR2B
+    //Note: If you modify this you'll also have to modify delay_one_ms() and ISR
+    //Timer0 Prescaler of 64
+    TCCR0B = 0x03;
+
+    //Timer 1
+    //PWM for Servo Motor
+    TCCR1A = (1 << COM1A1) | (1 << WGM11); 
+    TCCR1B = (1 << WGM13) | (1 << WGM12) | (1 << CS11);
+
+    ICR1 = 39999;
+    OCR1A = 3000;
+
+    //Timer 2 uses PWM on OCR2A and OCR2B
     // stop Timer2
     TCCR2B &= 0xF8;
 
     DIGITAL_WRITE_HIGH(DDRB, PB5);       // PB5 output
-    //Timer2 PWM
-    //Fast PWM Mode with TOP = 0xFF
-    //Clear OC2A on compare match, set OC2A at BOTTOM
-    TCCR2A |= (1 << COM2A1) | (1 << COM2A0) | (1 << WGM21) | (1 << WGM20);
+    /*
+    Timer2 PWM
+    Fast PWM Mode with TOP = 0xFF
+    Set OC2B on compare match (inverting mode), OC2B at BOTTOM
+    */
+    TCCR2A |= (1 << COM2B1) | (1 << COM2B0) |
+                (1 << WGM21) | (1 << WGM20);
     TCNT2  = 0;
 
-    //Timer2 ISR
-    OCR2B  = 250;
-    TIFR2  = (1 << OCF2B); // clear stale flag
-    TIMSK2 = (1 << OCIE2B); // enable compare-match interrupt
+    //Note: If you modify this you'll also have to modify the ISR in servo.cpp
+    // OCR2A = 20;
 
-    //Note: If you modify this you'll also have to modify the ISR ms value
-    //Timer2 Prescaler of 8       
+    //Timer2 Prescaler of 8      
     TCCR2B |= (1 << CS21);
-}
-
-void delay_one_ms(){
-    TCNT0 = (TIMER0_MAX_TICK) - (TICKS_1MS_64_PRESCALE);
-    TCCR0B = 0x03; //Set Prescaler to 64
-
-    while((TIFR0 & (1 << TOV0)) == 0);
-
-    TCCR0B = 0; //Stop Timer upon overflow
-    DIGITAL_WRITE_HIGH(TIFR0, TOV0); //Clear Timer Overflow flag
-}
-
-void delay_ms(uint16_t time_ms){
-    for(uint16_t i = 0; i < time_ms; i++){
-        delay_one_ms();
-    }
 }

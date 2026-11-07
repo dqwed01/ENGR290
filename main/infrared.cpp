@@ -3,6 +3,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 
 #include "src/pins.h"
@@ -10,6 +11,10 @@
 #include "src/infrared.h"
 #include "src/timer.h"
 #include "src/global.h"
+
+#ifdef DEBUGGING
+static char debug_message[64] = {0};
+#endif
 
 void ifr_sensor_init(){
     ADMUX = 0; //Use AREF
@@ -20,9 +25,15 @@ void ifr_sensor_init(){
 }
 
 float ifr_read(){
-    uint32_t value = adc_read(0);
+    uint16_t value = adc_read(0);
     if (value < 80) value = 80;
     float voltage = value * (2.55 / 1023.0);
- 
-    return (float)29.988 * pow(voltage, -1.173);
+    
+    float distance_cm = 29.988 * pow(voltage, -1.173);
+#ifdef DEBUGGING
+    char num[7];
+    dtostrf(distance_cm, 1, 2, num);
+    sprintf(debug_message, "ifr_read: %s cm\n", num);
+#endif
+    return distance_cm;
 }

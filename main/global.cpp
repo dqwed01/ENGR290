@@ -5,4 +5,4 @@
 
 #include "src/global.h"
 
-uint8_t blink_enabled = 0;
+volatile bool servo_move = false;

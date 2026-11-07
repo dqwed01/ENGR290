@@ -5,8 +5,12 @@
 #include "src/pwm.h"
 #include "src/global.h"
 
+#ifdef DEBUGGING
+static char debug_message[64] = {0};
+#endif
+
 void pwm_init(void){
-    DIGITAL_WRITE_HIGH(DDRB, PWM0);       // PB1 output
+    DIGITAL_WRITE_HIGH(DDRB, PWM0);       // PB3 output
     DIGITAL_WRITE_LOW(PORTB, PWM0);       // idle low
 }
 
