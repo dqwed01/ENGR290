@@ -1,6 +1,7 @@
 #define F_CPU 16000000UL
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
@@ -10,6 +11,10 @@
 #include "src/ultrasonic.h"
 #include "src/timer.h"
 #include "src/global.h"
+
+#ifdef DEBUGGING
+static char debug_message[64] = {0};
+#endif
 
 void us_sensor_init(){
     DDRB |= ((OUTPUT<<US1_TRIG)|(OUTPUT<<US2_TRIG) | (OUTPUT<<PB5)); //Set TRIG pin to Output
@@ -32,7 +37,7 @@ float us_read(uint8_t target_us){
             us_trig = US2_TRIG;
             us_echo_port = &PIND;
         }
-        uint32_t pulse_width_ticks;
+        uint16_t pulse_width_ticks;
 
         //Start Ranging
         DIGITAL_WRITE_HIGH(*us_trig_port, us_trig);
@@ -44,13 +49,19 @@ float us_read(uint8_t target_us){
 
         if(pulse_width_ticks != 0){
             uint32_t time_micro = pulse_width_ticks * US_PER_TICK_256_PRESCALE;
-            distance_cm = (time_micro <=116) ? 2 : time_micro / (uint16_t)58; //Minimum distance is 2cm
+            distance_cm = (time_micro <=116) ? 2 : ((float) time_micro) / 58.0; //Minimum distance is 2cm
         }
     }
 
     else{
         //Throw Error through UART
+        UART_transmit("us_read: Invalid Target US\n");
     }
 
+#ifdef DEBUGGING
+    char num[7];
+    dtostrf(distance_cm, 1, 2, num);
+    sprintf(debug_message, "us_read: %s cm", num);
+#endif
     return distance_cm;
 }

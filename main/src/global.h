@@ -1,6 +1,9 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
-
-extern uint8_t blink_enabled;
-
+ 
+//#define US_TESTING
+// #define DEBUGGING
+ 
+extern volatile bool servo_move;
+ 
 #endif
