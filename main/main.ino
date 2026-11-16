@@ -117,48 +117,6 @@ int main(){
             }
             pwm_set_duty(pwm_duty);
         }
-        // if(mpu6050_data_ready(&ready) == MPU6050_OK && ready){
-        //     if(mpu6050_read(&s) == MPU6050_OK){
-        //         // Integrate gyro Z using the real time since the last sample.
-        //         uint32_t imu_now = timer_millis();
-        //         dt = (imu_now - last_imu_ms) *0.001f;
-        //         yaw_deg += s.gz_dps * dt;
-        //         last_imu_ms = imu_now;
- 
-        //         float r, p;
-        //         if(mpu6050_accel_tilt(&s, &r, &p)){
-        //             roll_deg  = r;
-        //             pitch_deg = p;
-        //         }
- 
-        //         // PB5 LED: on while |yaw| > 85 degrees, off otherwise.
-        //         if(fabsf(yaw_deg) > YAW_LED_THRESHOLD_DEG){
-        //             DIGITAL_WRITE_HIGH(PORTB, PB5);
-        //         }
-        //         else{
-        //             DIGITAL_WRITE_LOW(PORTB, PB5);
-        //         }
- 
-        //         velocityx += s.ax_g * dt;
-        //         positionx += velocityx * dt;
-        //         // PWM LED brightness from |X acceleration|:
-        //         //   < 0.11 g -> 0 %,  > 1.11 g -> 100 %,  linear in between.
-        //         float ax = fabsf(s.ax_g);
-
-        //         uint8_t pwm_duty;
-        //         if(ax < PWM_ACCEL_OFF_G){
-        //             pwm_duty = 0;
-        //         }
-        //         else if(ax > PWM_ACCEL_FULL_G){
-        //             pwm_duty = 100;
-        //         }
-        //         else{
-        //             pwm_duty = (uint8_t)(((ax - PWM_ACCEL_OFF_G) /
-        //                         (PWM_ACCEL_FULL_G - PWM_ACCEL_OFF_G)) * 100.0f + 0.5f);
-        //         }
-        //         pwm_set_duty(pwm_duty);
-        //     }
-        // }
  
         uint32_t now = timer_millis();
  
