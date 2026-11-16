@@ -6,9 +6,7 @@
 #include <Arduino.h>
 #include <math.h>
 
-// The board is labeled ADC0/P5. The v3.10 pin table maps P5/1 to ADC6.
-// Select A0 here if a wiring check identifies the input as PC0/ADC0.
-constexpr uint8_t IR_INPUT = A6;
+constexpr uint8_t IR_INPUT = A0;    // P5/1, PC0/ADC0 on controller v3.11
 constexpr uint8_t US_TRIGGER = 11;  // P6/3, PB3
 constexpr uint8_t US_ECHO = 2;      // P6/2, PD2
 constexpr float IR_AREF_VOLTS = 2.55f;  // Match the measured external AREF.
