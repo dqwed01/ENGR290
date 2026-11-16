@@ -69,12 +69,13 @@ static void uart_queue_report(float roll, float pitch, float yaw,
 int main(){
     hovercraft_init();
  
-    MPU6050Sample s = {0, 0, 0, 0, 0, 0, 0};
     float yaw_deg   = 0;
     float roll_deg  = 0;
     float pitch_deg = 0;
+    float ax = 0;
+    float ay = 0;
+    float az = 0;
  
-    uint32_t start_ms       = timer_millis();
     uint32_t last_imu_ms    = start_ms;
     uint32_t last_servo_ms  = start_ms;
     uint32_t last_report_ms = start_ms;
@@ -88,48 +89,76 @@ int main(){
  
         // ---- IMU: read when a fresh sample is available --------------------
         bool ready = false;
-        if(mpu6050_data_ready(&ready) == MPU6050_OK && ready){
-            if(mpu6050_read(&s) == MPU6050_OK){
-                // Integrate gyro Z using the real time since the last sample.
-                uint32_t imu_now = timer_millis();
-                dt = (imu_now - last_imu_ms) *0.001f;
-                yaw_deg += s.gz_dps * dt;
-                last_imu_ms = imu_now;
- 
-                float r, p;
-                if(mpu6050_accel_tilt(&s, &r, &p)){
-                    roll_deg  = r;
-                    pitch_deg = p;
-                }
- 
-                // PB5 LED: on while |yaw| > 85 degrees, off otherwise.
-                if(fabsf(yaw_deg) > YAW_LED_THRESHOLD_DEG){
-                    DIGITAL_WRITE_HIGH(PORTB, PB5);
-                }
-                else{
-                    DIGITAL_WRITE_LOW(PORTB, PB5);
-                }
- 
-                velocityx += s.ax_g * dt;
-                positionx += velocityx * dt;
-                // PWM LED brightness from |X acceleration|:
-                //   < 0.11 g -> 0 %,  > 1.11 g -> 100 %,  linear in between.
-                float ax = fabsf(s.ax_g);
-
-                uint8_t pwm_duty;
-                if(ax < PWM_ACCEL_OFF_G){
-                    pwm_duty = 0;
-                }
-                else if(ax > PWM_ACCEL_FULL_G){
-                    pwm_duty = 100;
-                }
-                else{
-                    pwm_duty = (uint8_t)(((ax - PWM_ACCEL_OFF_G) /
-                                (PWM_ACCEL_FULL_G - PWM_ACCEL_OFF_G)) * 100.0f + 0.5f);
-                }
-                pwm_set_duty(pwm_duty);
+        if(imu_read(&yaw_deg, &roll_deg, &pitch_deg, &ax, &ay, &az, &dt)){
+            // PB5 LED: on while |yaw| > 85 degrees, off otherwise.
+            if(fabsf(yaw_deg) > YAW_LED_THRESHOLD_DEG){
+                DIGITAL_WRITE_HIGH(PORTB, PB5);
             }
+            else{
+                DIGITAL_WRITE_LOW(PORTB, PB5);
+            }
+
+            velocityx += ax * dt;
+            positionx += velocityx * dt;
+            // PWM LED brightness from |X acceleration|:
+            //   < 0.11 g -> 0 %,  > 1.11 g -> 100 %,  linear in between.
+            ax = fabsf(ax);
+
+            uint8_t pwm_duty;
+            if(ax < PWM_ACCEL_OFF_G){
+                pwm_duty = 0;
+            }
+            else if(ax > PWM_ACCEL_FULL_G){
+                pwm_duty = 100;
+            }
+            else{
+                pwm_duty = (uint8_t)(((ax - PWM_ACCEL_OFF_G) /
+                            (PWM_ACCEL_FULL_G - PWM_ACCEL_OFF_G)) * 100.0f + 0.5f);
+            }
+            pwm_set_duty(pwm_duty);
         }
+        // if(mpu6050_data_ready(&ready) == MPU6050_OK && ready){
+        //     if(mpu6050_read(&s) == MPU6050_OK){
+        //         // Integrate gyro Z using the real time since the last sample.
+        //         uint32_t imu_now = timer_millis();
+        //         dt = (imu_now - last_imu_ms) *0.001f;
+        //         yaw_deg += s.gz_dps * dt;
+        //         last_imu_ms = imu_now;
+ 
+        //         float r, p;
+        //         if(mpu6050_accel_tilt(&s, &r, &p)){
+        //             roll_deg  = r;
+        //             pitch_deg = p;
+        //         }
+ 
+        //         // PB5 LED: on while |yaw| > 85 degrees, off otherwise.
+        //         if(fabsf(yaw_deg) > YAW_LED_THRESHOLD_DEG){
+        //             DIGITAL_WRITE_HIGH(PORTB, PB5);
+        //         }
+        //         else{
+        //             DIGITAL_WRITE_LOW(PORTB, PB5);
+        //         }
+ 
+        //         velocityx += s.ax_g * dt;
+        //         positionx += velocityx * dt;
+        //         // PWM LED brightness from |X acceleration|:
+        //         //   < 0.11 g -> 0 %,  > 1.11 g -> 100 %,  linear in between.
+        //         float ax = fabsf(s.ax_g);
+
+        //         uint8_t pwm_duty;
+        //         if(ax < PWM_ACCEL_OFF_G){
+        //             pwm_duty = 0;
+        //         }
+        //         else if(ax > PWM_ACCEL_FULL_G){
+        //             pwm_duty = 100;
+        //         }
+        //         else{
+        //             pwm_duty = (uint8_t)(((ax - PWM_ACCEL_OFF_G) /
+        //                         (PWM_ACCEL_FULL_G - PWM_ACCEL_OFF_G)) * 100.0f + 0.5f);
+        //         }
+        //         pwm_set_duty(pwm_duty);
+        //     }
+        // }
  
         uint32_t now = timer_millis();
  
@@ -143,7 +172,7 @@ int main(){
         if((uint32_t)(now - last_report_ms) >= REPORT_PERIOD_MS && !uart_tx_busy()){
             last_report_ms += REPORT_PERIOD_MS;
             uart_queue_report(roll_deg, pitch_deg, yaw_deg,
-                              s.ax_g, s.ay_g, s.az_g, positionx);
+                              ax, ay, az, positionx);
         }
     }
  

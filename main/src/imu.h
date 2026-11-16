@@ -105,4 +105,6 @@ void mpu6050_clear_gyro_bias();
 bool mpu6050_accel_tilt(const MPU6050Sample *sample,
                        float *roll_deg, float *pitch_deg);
 
+bool imu_read(float* p_yaw_deg, float* p_roll_deg, float* p_pitch_deg, 
+                float* p_ax, float* p_ay, float* p_az, float* p_dt);
 #endif

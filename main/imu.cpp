@@ -9,6 +9,8 @@
 #include <math.h>
 
 #include "src/imu.h"
+#include "src/global.h"
+#include "src/timer.h"
 
 namespace {
 // MPU6050 register addresses, from the manufacturer's register map.
@@ -301,4 +303,28 @@ bool mpu6050_accel_tilt(const MPU6050Sample *sample, float *roll_deg, float *pit
     *roll_deg = atan2f(sample->ay_g, sample->az_g) * radians_to_degrees;
     *pitch_deg = atan2f(-sample->ax_g, sqrtf(yz_squared)) * radians_to_degrees;
     return true;
+}
+
+bool imu_read(float* p_yaw_deg, float* p_roll_deg, float* p_pitch_deg, float* p_ax, float* p_ay, float* p_az, float* p_dt){
+    MPU6050Sample s = {0, 0, 0, 0, 0, 0, 0};
+    static uint32_t last_imu_ms = start_ms; 
+    bool ready = false;
+    if(mpu6050_data_ready(&ready) == MPU6050_OK && ready){
+        if(mpu6050_read(&s) == MPU6050_OK){
+            // Integrate gyro Z using the real time since the last sample.
+            uint32_t imu_now = timer_millis();
+            *p_dt = (imu_now - last_imu_ms) *0.001f;
+            (*p_yaw_deg) += s.gz_dps * (*p_dt);
+            last_imu_ms = imu_now;
+
+            mpu6050_accel_tilt(&s, p_yaw_deg, p_roll_deg);
+            *p_ax = s.ax_g;
+            *p_ay = s.ay_g;
+            *p_az = s.az_g;
+        }
+        else{
+            ready = false;
+        }
+    }
+    return ready;
 }

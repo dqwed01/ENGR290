@@ -41,5 +41,6 @@ to break. This could be due to lack of battery ? To be tested
     mpu6050_set_sample_rate(3,9);
     _delay_ms(2000);
     mpu6050_calibrate_gyro(500);
+    start_ms = timer_millis();
     sei();
 }
