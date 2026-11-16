@@ -1,13 +1,16 @@
 /*
  * Open this sketch for a classic Arduino Nano and set Serial Monitor to 115200.
- * Sharp GP2Y0A21 analog output: A0. This sketch expects an external AREF.
- * HC-SR04: D11 trigger, D2 echo. Use a common ground.
+ * Sharp GP2Y0A21 on connector P5. This sketch expects an external AREF.
+ * HC-SR04 on connector P6: pin 3 trigger, pin 2 echo. Use a common ground.
  */
 #include <Arduino.h>
 #include <math.h>
 
-constexpr uint8_t US_TRIGGER = 11;
-constexpr uint8_t US_ECHO = 2;
+// The board is labeled ADC0/P5. The v3.10 pin table maps P5/1 to ADC6.
+// Select A0 here if a wiring check identifies the input as PC0/ADC0.
+constexpr uint8_t IR_INPUT = A6;
+constexpr uint8_t US_TRIGGER = 11;  // P6/3, PB3
+constexpr uint8_t US_ECHO = 2;      // P6/2, PD2
 constexpr float IR_AREF_VOLTS = 2.55f;  // Match the measured external AREF.
 constexpr unsigned long ECHO_TIMEOUT_US = 30000;
 constexpr unsigned long PING_GAP_MS = 65;  // Allow echoes to fade before the next ping.
@@ -47,7 +50,7 @@ void printInfraredCm(int adc) {
 void setup() {
     Serial.begin(115200);
     analogReference(EXTERNAL);
-    analogRead(A0);  // Apply the reference and discard the first conversion.
+    analogRead(IR_INPUT);  // Apply the reference and discard the first conversion.
 
     pinMode(US_TRIGGER, OUTPUT);
     digitalWrite(US_TRIGGER, LOW);
@@ -56,7 +59,7 @@ void setup() {
 
 void loop() {
     const unsigned long echoMicros = readEchoMicros();
-    const int ir = analogRead(A0);
+    const int ir = analogRead(IR_INPUT);
 
     Serial.print(F("IR_raw="));
     Serial.print(ir);
