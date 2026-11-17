@@ -4,6 +4,10 @@
 //PWM Pins
 #define PWM0 PB3
 
+//IR Pins
+#define IR_SENSOR1_PIN ADC0
+#define IR_SENSOR2_PIN ADC1
+
 //Ultrasonic Sensor Pins
 //TO BE UPDATED
 #define US1_ECHO PB0

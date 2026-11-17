@@ -2,6 +2,6 @@
 #define INFRARED_H
 
 void ifr_sensor_init();
-float ifr_read();
+float ifr_read(uint8_t pin);
 
 #endif

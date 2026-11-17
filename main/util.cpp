@@ -52,12 +52,13 @@ uint32_t read_pulse(volatile uint8_t* p_port, uint8_t pin, uint8_t value, uint16
     return (overflows << 8) | low;
 }
 
-uint32_t adc_read(uint8_t pin){
+uint16_t adc_read(uint8_t pin){
     if(pin >= 8){
         return 0xFFFF; //Invalid ADC pin
     } 
 
     char message[16];
+    ADMUX = pin; // Select ADC pin
     DIGITAL_WRITE_HIGH(ADCSRA, ADSC); //Start ADC conversion
     int guard = 20000;
     do {
@@ -71,7 +72,7 @@ uint32_t adc_read(uint8_t pin){
     sprintf(message, "ADC %d\n", ADC);
     UART_transmit(message);
 
-    uint32_t value = ADCL;
+    uint16_t value = ADCL;
     value |= (ADCH << 8);
     return value;
 }
