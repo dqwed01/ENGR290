@@ -1,0 +1,66 @@
+' Hovercraft FSM — transcribed from the whiteboard sketch.
+' Move and Turn are composite states; their internal flow is shown as substates.
+' Each state's final pseudostate fires the completion transition to the other state.
+
+@startuml fsm
+
+title Hovercraft FSM
+
+hide empty description
+skinparam shadowing false
+skinparam roundCorner 14
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 13
+skinparam ArrowColor #37474F
+skinparam ArrowFontSize 12
+skinparam ArrowFontColor #37474F
+skinparam nodesep 50
+skinparam ranksep 40
+skinparam state {
+  BackgroundColor #FFFFFF
+  BorderColor #37474F
+  StartColor #37474F
+  EndColor #37474F
+}
+
+[*] --> Move
+
+state Move #E3F2FD {
+  state BarCheck <<choice>>
+  state "Lift fan off" as LiftOff
+  state "Check IMU" as M_IMU
+  state "Adjust lift fan" as M_Lift
+  state "Check IR" as M_IR
+  state TurnCheck <<choice>>
+  state "Adjust thrust fan" as M_Thrust
+
+  [*] -down-> BarCheck : bar?
+  BarCheck -left-> LiftOff : yes
+  LiftOff -down-> BarCheck
+  BarCheck -down-> M_IMU : no
+  M_IMU -down-> M_Lift
+  M_Lift -down-> M_IR
+  M_IR -down-> TurnCheck : turn cond?
+  TurnCheck -left-> M_Thrust : no
+  M_Thrust -up-> BarCheck
+  TurnCheck -down-> [*] : yes
+}
+
+state Turn #FFF3E0 {
+  state "Check IMU" as T_IMU
+  state "Check IRs" as T_IR
+  state "Adjust thrust fan" as T_Thrust
+  state MoveCheck <<choice>>
+
+  [*] -down-> T_IMU
+  T_IMU -down-> T_IR
+  T_IR -down-> T_Thrust
+  T_Thrust -down-> MoveCheck : move cond?
+  MoveCheck -left-> T_IMU : no
+  MoveCheck -down-> [*] : yes
+}
+
+Move -right-> Turn : **turn cond**\nIRx_cm >> IRy_cm\nor IRy_cm >> IRx_cm
+Turn -left-> Move : **move cond**\nyaw ≈ 180° turned\nand IRx_cm ≈ IRy_cm
+
+@enduml
