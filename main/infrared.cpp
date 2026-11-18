@@ -16,9 +16,9 @@ void ifr_sensor_init(){
     //Prescaler of 128 (125kHz ADC clock for 16MHz system clock)
     ADCSRA = (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);
 
-    // A0..A5 are Arduino pin numbers (14..19); subtract A0 to get the ADC channel (0..5),
+    // Disable digital input buffers on ADC0 and ADC1 to reduce power consumption
+    // Values are hardcoded, make sure to update these if the IR pins change
     DIDR0 |= (1 << ADC0D) | (1 << ADC1D); 
-
 }
 
 float ifr_read(uint8_t pin){

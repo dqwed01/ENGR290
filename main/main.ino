@@ -32,6 +32,8 @@ int main(){
         sprintf(message, "%d cm ultrasonic\n", (uint16_t)(distance_cm * 100));
         UART_transmit(message);
 #else
+        // IR pins are hardcoded to A0 and A1, which correspond to ADC channels 0 and 1
+        // Make sure to change these if the IR pins change
         distance_cm = ifr_read(0);
         sprintf(message, "%d cm infrared1\n", (uint16_t) (distance_cm * 100));
         UART_transmit(message);
