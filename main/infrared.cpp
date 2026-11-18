@@ -11,8 +11,7 @@
 #include "src/timer.h"
 #include "src/global.h"
 
-void ifr_sensor_init(){
-    ADMUX = 0; //Use AREF
+void adc_init(){
     //Prescaler of 128 (125kHz ADC clock for 16MHz system clock)
     ADCSRA = (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);
 
