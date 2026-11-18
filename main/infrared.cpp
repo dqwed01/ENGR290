@@ -22,9 +22,10 @@ void ifr_sensor_init(){
 
 float ifr_read(uint8_t pin){
     if (pin < A0 || pin > A5) return -1.0; // Invalid pin
-    
+
     pin -= A0; // Convert Arduino pin number to ADC channel
     uint16_t value = adc_read(pin);
+    if (value == 0xFFFF) return -1.0;
     if (value < 80) value = 80;
     float voltage = value * (2.55 / 1023.0);
  
