@@ -32,8 +32,11 @@ int main(){
         sprintf(message, "%d cm ultrasonic\n", (uint16_t)(distance_cm * 100));
         UART_transmit(message);
 #else
-        distance_cm = ifr_read();
-        sprintf(message, "%d cm infrared\n", (uint16_t) (distance_cm * 100));
+        distance_cm = ifr_read(0);
+        sprintf(message, "%d cm infrared1\n", (uint16_t) (distance_cm * 100));
+        UART_transmit(message);
+        distance_cm = ifr_read(1);
+        sprintf(message, "%d cm infrared2\n", (uint16_t) (distance_cm * 100));
         UART_transmit(message);
 #endif
 
@@ -52,8 +55,8 @@ int main(){
         else if (distance_cm < 49){
             pwm_duty = ((49-((int)distance_cm))*100)/33;
         }
-        sprintf(message, "PWM Duty: %d\n", pwm_duty);
-        UART_transmit(message);
+        // sprintf(message, "PWM Duty: %d\n", pwm_duty);
+        // UART_transmit(message);
         pwm_set_duty(pwm_duty);
         delay_ms(100);
     }
