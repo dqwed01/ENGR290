@@ -4,9 +4,7 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 
-#include "src/util.h"
 #include "src/timer.h"
-#include "src/pins.h"
 #include "src/global.h"
 
 #ifdef DEBUGGING
@@ -37,7 +35,7 @@ void timer_init(){
     OCR0B = 250;
     //clear stale flags
     TIFR0 = ~1;
-    //Interrupt on OCR2B Match
+    //Interrupt on OCR0B Match
     TIMSK0 = (1 << OCIE0B);
 
     //Normal Mode
@@ -55,24 +53,4 @@ void timer_init(){
 
     ICR1 = 39999;
     OCR1A = 3000;
-
-    //Timer 2 uses PWM on OCR2A and OCR2B
-    // stop Timer2
-    TCCR2B &= 0xF8;
-
-    DIGITAL_WRITE_HIGH(DDRB, PB5);       // PB5 output
-    /*
-    Timer2 PWM
-    Fast PWM Mode with TOP = 0xFF
-    Set OC2B on compare match (inverting mode), OC2B at BOTTOM
-    */
-    TCCR2A |= (1 << COM2B1) | (1 << COM2B0) |
-                (1 << WGM21) | (1 << WGM20);
-    TCNT2  = 0;
-
-    //Note: If you modify this you'll also have to modify the ISR in servo.cpp
-    // OCR2A = 20;
-
-    //Timer2 Prescaler of 8      
-    TCCR2B |= (1 << CS21);
 }

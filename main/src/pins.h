@@ -1,9 +1,6 @@
 #ifndef PINS_H
 #define PINS_H
 
-//PWM Pins
-#define PWM0 PB3
-
 //Ultrasonic Sensor Pins
 //TO BE UPDATED
 #define US1_ECHO PB0
