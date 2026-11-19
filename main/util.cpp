@@ -71,6 +71,14 @@ uint16_t adc_read(uint8_t pin){
     } 
 
     char message[16];
+    ADMUX = pin; // Select ADC pin
+    _delay_us(10);
+
+    //Flush out previous channel's charge
+    DIGITAL_WRITE_HIGH(ADCSRA, ADSC); //Start ADC conversion
+    while(DIGITAL_READ(ADCSRA, ADSC));
+
+    //Start read reading
     DIGITAL_WRITE_HIGH(ADCSRA, ADSC); //Start ADC conversion
     int guard = 20000;
     do {

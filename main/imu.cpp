@@ -317,7 +317,7 @@ bool imu_read(float* p_yaw_deg, float* p_roll_deg, float* p_pitch_deg, float* p_
             (*p_yaw_deg) += s.gz_dps * (*p_dt);
             last_imu_ms = imu_now;
 
-            mpu6050_accel_tilt(&s, p_yaw_deg, p_roll_deg);
+            mpu6050_accel_tilt(&s, p_roll_deg, p_pitch_deg);
             *p_ax = s.ax_g;
             *p_ay = s.ay_g;
             *p_az = s.az_g;

@@ -32,7 +32,7 @@ to break. This could be due to lack of battery ? To be tested
 #ifdef US_TESTING
     //us_sensor_init();
 #else
-    // ifr_sensor_init();
+    // adc_init();
 #endif
     servo_init();
     mpu6050_init();
