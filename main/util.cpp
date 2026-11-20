@@ -32,6 +32,9 @@ uint16_t read_pulse(volatile uint8_t* p_port, uint8_t pin, uint8_t value, uint16
     uint16_t max_overflows = timeout_in_ticks >> 8;   // 3750 -> 14 (about 57 ms)
     uint16_t overflows = 0;
 
+    // This sucks, and needs fixing
+    // I suggest adding a timer_micros() to timer.cpp which reads TCNT0 (µs since last 1ms interrupt).
+    // Then just subtract end - start instead of reprogramming Timer0
     TCCR0B = 0;
     TCNT0 = 0;
     TIFR0 = (1 << TOV0);
