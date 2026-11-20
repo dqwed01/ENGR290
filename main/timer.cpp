@@ -15,6 +15,25 @@ static char debug_message[64] = {0};
 
 static volatile uint32_t ms_ticks = 0;
 
+ISR(TIMER2_COMPA_vect) {
+    ms_ticks++;
+}
+
+void timer_clock_init() {
+    uint8_t sreg = SREG;
+    cli();
+    TCCR2B = 0;
+    TIMSK2 = 0;
+    TCCR2A = (1 << WGM21);  // CTC, hardware resets the counter at OCR2A.
+    TCNT2 = 0;
+    OCR2A = 124;           // 16 MHz / 128 / 125 = 1000 Hz.
+    TIFR2 = (1 << OCF2A) | (1 << OCF2B) | (1 << TOV2);
+    ms_ticks = 0;
+    TIMSK2 = (1 << OCIE2A);
+    TCCR2B = (1 << CS22) | (1 << CS20);
+    SREG = sreg;
+}
+
 ISR(TIMER0_COMPB_vect){ //Triggers every 1ms (250 ticks * 4 us at prescaler 64)
     OCR0B += 250;
     ms_ticks++;

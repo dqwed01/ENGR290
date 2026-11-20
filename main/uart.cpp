@@ -5,7 +5,8 @@
 namespace {
 const char startup_message[] =
     "Lift P4: 000% | Servo P9: +000deg\r\n"
-    "+/- lift 10%, s stop; a/d servo 10deg, c center\r\n";
+    "+/- lift 10%, s stop; a/d servo 10deg, c center\r\n"
+    "Auto-start 100% after 3s; any valid command cancels.\r\n";
 char report[] = "Lift P4: 000% | Servo P9: +000deg\r\n";
 constexpr uint8_t LIFT_VALUE_OFFSET = sizeof("Lift P4: ") - 1;
 constexpr uint8_t SERVO_VALUE_OFFSET = sizeof("Lift P4: 000% | Servo P9: ") - 1;

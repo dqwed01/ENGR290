@@ -13,10 +13,13 @@
 
 
 void timer_init();
+// Timer2 supplies a 1 ms clock alongside Timer0 lift PWM and Timer1 servo PWM.
+// Enable global interrupts after initialization.
+void timer_clock_init();
 void delay_one_ms();
 void delay_ms(uint16_t);
 
-// Milliseconds since timer_init(), counted by the Timer0 compare-B ISR.
+// Milliseconds from the selected clock, reset by timer_clock_init().
 // Wraps after ~49.7 days; compare with (uint32_t)(now - then).
 uint32_t timer_millis();
 
