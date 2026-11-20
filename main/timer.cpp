@@ -4,14 +4,7 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 
-#include "src/util.h"
 #include "src/timer.h"
-#include "src/pins.h"
-#include "src/global.h"
-
-#ifdef DEBUGGING
-static char debug_message[64] = {0};
-#endif
 
 static volatile uint32_t ms_ticks = 0;
 
