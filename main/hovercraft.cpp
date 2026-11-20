@@ -2,7 +2,7 @@
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <avr/delay.h>
+#include <util/delay.h>
 
 #include "src/hovercraft.h"
 #include "src/pins.h"
@@ -12,7 +12,6 @@
 #include "src/infrared.h"
 #include "src/pwm.h"
 #include "src/global.h"
-#include "src/servo.h"
 #include "src/imu.h"
 
 #ifdef DEBUGGING
@@ -37,7 +36,6 @@ to break. This could be due to lack of battery ? To be tested
     DIGITAL_WRITE_HIGH(DDRB, YAW_LED);   // set yaw indicator LED as output
     DIGITAL_WRITE_LOW(PORTB, YAW_LED);   // start in the off state
 
-    servo_init();
     mpu6050_init();
     mpu6050_set_gyro_range(MPU6050_GYRO_250_DPS);
     mpu6050_set_accel_range(MPU6050_ACCEL_2G);

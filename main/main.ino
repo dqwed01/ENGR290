@@ -18,7 +18,6 @@
 #include "src/timer.h"
 #include "src/pwm.h"
 #include "src/global.h"
-#include "src/servo.h"
 #include "src/imu.h"
  
 // ---- Tunable behaviour -----------------------------------------------------
@@ -115,7 +114,7 @@ int main(){
                 pwm_duty = (uint8_t)(((ax - PWM_ACCEL_OFF_G) /
                             (PWM_ACCEL_FULL_G - PWM_ACCEL_OFF_G)) * 100.0f + 0.5f);
             }
-            pwm_set_duty(pwm_duty);
+            // pwm_set_duty(pwm_duty); // not sure what this does
         }
  
         uint32_t now = timer_millis();
@@ -123,7 +122,7 @@ int main(){
         // ---- Servo: update every 20 ms, no blocking -------------------------
         if((uint32_t)(now - last_servo_ms) >= SERVO_UPDATE_MS){
             last_servo_ms += SERVO_UPDATE_MS;   // fixed period, no drift
-            servo_set_angle(yaw_deg);
+            pwm_set_servo_angle(yaw_deg);
         }
  
         // ---- UART report: every 1.5 s ---------------------------------------

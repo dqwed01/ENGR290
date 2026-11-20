@@ -4,6 +4,7 @@
 #include <avr/interrupt.h>
 
 #include "src/timer.h"
+#include "src/pwm.h"
 
 static volatile uint32_t ms_ticks = 0;
 
@@ -51,12 +52,12 @@ void timer_init(){
     // WGM11: low half of the mode bits (WGM13:12 are set in TCCR1B below)
     TCCR1A = (1 << COM1A1) | (1 << WGM11);
 
-    // Period: (39999 + 1) × 0.5 µs = 20 ms = 50 Hz
-    ICR1 = 39999;
+    // Period: (39999 + 1) × 0.5 µs = 20 ms
+    ICR1 = SERVO_PWM_TOP;
     // Pulse: 3000 × 0.5 µs = 1.5 ms
-    OCR1A = 3000;
+    OCR1A = SERVO_PWM_CENTER;
 
-    // WGM13:0 = 1110: Fast PWM with TOP = ICR1.
+    // WGM13:10 = 1110: Fast PWM with TOP = ICR1.
     // CS11: prescaler 8: 16 MHz / 8 = 2 MHz, so one tick = 0.5 µs.
     // Written last so Timer1 only starts once ICR1 and OCR1A are set
     TCCR1B = (1 << WGM13) | (1 << WGM12) | (1 << CS11);
@@ -65,12 +66,16 @@ void timer_init(){
     // Stop Timer2
     TCCR2B &= 0xF8;
 
-    // Set Fast PWM Mode with TOP = 0xFF
-    // Set OC2B on compare match, clear OC2B at BOTTOM (inverting mode)
-    TCCR2A |= (1 << COM2B1) | (1 << COM2B0) |
-                (1 << WGM21) | (1 << WGM20);
-    TCNT2  = 0;
+    // WGM22:20 = 111: Set Fast PWM Mode with TOP = OCR2A
+    // set_fan_duty() sets COM2B1: Non-inverting on PD3
+    TCCR2A |= (1 << WGM21) | (1 << WGM20);
 
-    // Timer2 Prescaler of 8      
-    TCCR2B |= (1 << CS21);
+    // 25 kHz PWM frequency: (16 MHz / 8) / (79 + 1) = 25 kHz
+    OCR2A = FAN_PWM_TOP;
+    
+    // Set initial duty cycle to 0% (0/79)
+    // OCR2B = 0; // not actually necessary since the pin is disconnected when duty cycle is 0%
+
+    // Timer2 Prescaler of 8
+    TCCR2B |= (1 << WGM22) | (1 << CS21);
 }
