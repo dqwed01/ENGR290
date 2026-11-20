@@ -32,7 +32,7 @@ uint32_t timer_millis(){
 void timer_init(){
     //Timer 0
     //ISR
-    
+
     //Stop Timer
     TCCR0B &= 0xF8;
     OCR0B = 250;
@@ -60,7 +60,6 @@ void timer_init(){
     // stop Timer2
     TCCR2B &= 0xF8;
 
-    DIGITAL_WRITE_HIGH(DDRB, PB5);       // PB5 output
     /*
     Timer2 PWM
     Fast PWM Mode with TOP = 0xFF
