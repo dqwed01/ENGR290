@@ -57,7 +57,7 @@ static void uart_queue_report(float roll, float pitch, float yaw,
     dtostrf(az,    1, 2, z);
     dtostrf(positionx,  1, 2, posx);
     int n = snprintf(tx_buf, sizeof(tx_buf),
-                     "roll=%s pitch=%s yaw=%s deg | ax=%s ay=%s az=%s | postitionx=%s g\r\n",
+                     "roll=%s pitch=%s yaw=%s deg | ax=%s ay=%s az=%s | positionx=%s g\r\n",
                      r, p, y, x, yy, z, posx);
     if(n < 0) n = 0;
     if(n > (int)sizeof(tx_buf) - 1) n = sizeof(tx_buf) - 1;
@@ -75,7 +75,6 @@ int main(){
     float ay = 0;
     float az = 0;
  
-    uint32_t last_imu_ms    = start_ms;
     uint32_t last_servo_ms  = start_ms;
     uint32_t last_report_ms = start_ms;
 
@@ -114,7 +113,7 @@ int main(){
                 pwm_duty = (uint8_t)(((ax - PWM_ACCEL_OFF_G) /
                             (PWM_ACCEL_FULL_G - PWM_ACCEL_OFF_G)) * 100.0f + 0.5f);
             }
-            // pwm_set_duty(pwm_duty); // not sure what this does
+            pwm_set_fan_speed(pwm_duty);
         }
  
         uint32_t now = timer_millis();
