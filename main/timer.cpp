@@ -22,45 +22,52 @@ uint32_t timer_millis(){
 
 
 void timer_init(){
-    //Timer 0
-    //ISR
+    // ------ Timer 0 (1ms Interrupt) ------
+    // Uses the above ISR
 
-    //Stop Timer
+    // Stop Timer0
     TCCR0B &= 0xF8;
+
+    // Normal Mode
+    TCCR0A = 0;
+
+    // Set Compare Match Register for 1ms increments
     OCR0B = 250;
 
-    //Interrupt on OCR2B Match
+    //Interrupt on OCR0B Match
     TIMSK0 = (1 << OCIE0B);
 
-    //Normal Mode
-    TCCR0A = 0;
-    TIFR0 = ~0; // Clear all interrupt flags
+    // Clear all interrupt flags
+    TIFR0 = ~0;
 
-    //Note: If you modify this you'll also have to modify delay_one_ms() and ISR
-    //Timer0 Prescaler of 64
+    // Prescaler of 64, starts timer
     TCCR0B = 0x03;
 
-    //Timer 1
-    //PWM for Servo Motor
-    TCCR1A = (1 << COM1A1) | (1 << WGM11); 
-    TCCR1B = (1 << WGM13) | (1 << WGM12) | (1 << CS11);
+    // ------ Timer 1 (PWM for Servo Motor) ------
+    // Stop Timer1
+    TCCR1B &= 0xF8;
 
+    TCCR1A = (1 << COM1A1) | (1 << WGM11); 
+    // COM1A1: Non-inverting on PB1
+    TCCR1B = (1 << WGM13) | (1 << WGM12) | (1 << CS11);
+    // WGM13:0 = 1110: Fast PWM with TOP = ICR1.
+    // CS11: prescaler 8: 16 MHz / 8 = 2 MHz, so one tick = 0.5 µs.
+
+    // Period: (39999 + 1) × 0.5 µs = 20 ms = 50 Hz
     ICR1 = 39999;
+    // Pulse: 3000 × 0.5 µs = 1.5 ms
     OCR1A = 3000;
 
-    //Timer 2 uses PWM on OCR2A and OCR2B
-    // stop Timer2
+    // ------ Timer 2 (PWM for Lift and Thrust Fans) ------
+    // Stop Timer2
     TCCR2B &= 0xF8;
 
-    /*
-    Timer2 PWM
-    Fast PWM Mode with TOP = 0xFF
-    Set OC2B on compare match (inverting mode), OC2B at BOTTOM
-    */
+    // Set Fast PWM Mode with TOP = 0xFF
+    // Set OC2B on compare match (inverting mode), OC2B at BOTTOM
     TCCR2A |= (1 << COM2B1) | (1 << COM2B0) |
                 (1 << WGM21) | (1 << WGM20);
     TCNT2  = 0;
 
-    //Timer2 Prescaler of 8      
+    // Timer2 Prescaler of 8      
     TCCR2B |= (1 << CS21);
 }
