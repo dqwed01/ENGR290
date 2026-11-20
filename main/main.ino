@@ -1,138 +1,95 @@
-/**
- * @file main.c
- * @author minht
- * @date 2026-09-28
- * @brief Main function
+/*
+ * Lift fan test for the ENGR290 controller v3.11 (16 MHz ATmega328P).
+ * P4 pin 1 = fan positive; P4 pin 2 = fan negative.
+ * Serial Monitor: 115200 baud. '+' adds 10%, '-' subtracts 10%, 's' stops.
  */
-#define F_CPU 16000000UL
- 
-#include <stdio.h>
-#include <stdlib.h>
 #include <avr/io.h>
-#include <avr/interrupt.h>
-#include <util/delay.h>
-#include <math.h>
- 
-#include "src/hovercraft.h"
-#include "src/util.h"
-#include "src/timer.h"
-#include "src/pwm.h"
-#include "src/global.h"
-#include "src/servo.h"
-#include "src/imu.h"
- 
-// ---- Tunable behaviour -----------------------------------------------------
-#define YAW_LED_THRESHOLD_DEG 85.0f   // PB5 LED on when |yaw| exceeds this
-#define PWM_ACCEL_OFF_G       0.11f   // |ax| below this  -> 0 %   duty
-#define PWM_ACCEL_FULL_G      1.11f   // |ax| above this  -> 100 % duty
-#define SERVO_UPDATE_MS       20UL    // servo angle refresh period
-#define REPORT_PERIOD_MS      1500UL  // UART report period
- 
-// ---- Non-blocking UART transmit -------------------------------------------
-// UART_transmit() busy-waits (~1 ms per character at 9600 baud), so a ~70
-// character report would stall the loop for ~70 ms and make the IMU/servo
-// miss their timing. Instead the report is formatted into a buffer and the
-// main loop hands one byte to the UART whenever its data register is empty.
-static char    tx_buf[144];
-static uint8_t tx_len = 0;
-static uint8_t tx_pos = 0;
- 
-static inline bool uart_tx_busy(){
-    return tx_pos < tx_len;
+
+constexpr uint32_t UART_BAUD_RATE = 115200UL;
+constexpr uint16_t UART_DIVISOR =
+    (F_CPU + 4UL * UART_BAUD_RATE) / (8UL * UART_BAUD_RATE) - 1;
+constexpr uint8_t DUTY_STEP_PERCENT = 10;
+
+void uart_init() {
+    UCSR0A = (1 << U2X0);  // Double speed gives a closer match to 115200 baud.
+    UBRR0H = static_cast<uint8_t>(UART_DIVISOR >> 8);
+    UBRR0L = static_cast<uint8_t>(UART_DIVISOR);
+    UCSR0B = (1 << RXEN0) | (1 << TXEN0);
+    UCSR0C = (1 << UCSZ01) | (1 << UCSZ00);  // 8 data bits, no parity, 1 stop bit.
 }
- 
-static inline void uart_tx_pump(){
-    if(tx_pos < tx_len && (UCSR0A & (1 << UDRE0))){
-        UDR0 = tx_buf[tx_pos++];
+
+void lift_init() {
+    TCCR0B = 0;                 // Stop Timer0 while configuring it.
+    TCCR0A = 0;                 // Disconnect both PWM outputs.
+    PORTD &= ~(1 << PD6);       // P4 control low = fan off.
+    DDRD |= (1 << PD6);         // PD6/OC0A controls P4's power MOSFET.
+    TIMSK0 = 0;                 // Hardware PWM needs no timer interrupts.
+    TCNT0 = 0;
+    OCR0A = 0;
+    TCCR0A = (1 << WGM01) | (1 << WGM00);  // Fast PWM, TOP = 255.
+    TCCR0B = (1 << CS01) | (1 << CS00);    // 16 MHz / 64 / 256 = 976.6 Hz.
+}
+
+void lift_set_duty(uint8_t percent) {
+    if (percent == 0 || percent >= 100) {
+        // Exact off/on levels avoid the timer's narrow pulse at zero duty.
+        if (percent == 0) {
+            PORTD &= ~(1 << PD6);
+        } else {
+            PORTD |= (1 << PD6);
+        }
+        TCCR0A &= ~((1 << COM0A1) | (1 << COM0A0));
+    } else {
+        // 1..99% uses non-inverting hardware PWM on OC0A.
+        OCR0A = (static_cast<uint16_t>(percent) * 256UL + 50UL) / 100UL - 1;
+        TCCR0A |= (1 << COM0A1);
     }
 }
- 
-static void uart_queue_report(float roll, float pitch, float yaw,
-                              float ax, float ay, float az, float positionx){
-    char r[12], p[12], y[12], x[12], yy[12], z[12], posx[12];
-    dtostrf(roll,  1, 2, r);
-    dtostrf(pitch, 1, 2, p);
-    dtostrf(yaw,   1, 2, y);
-    dtostrf(ax,    1, 2, x);
-    dtostrf(ay,    1, 2, yy);
-    dtostrf(az,    1, 2, z);
-    dtostrf(positionx,  1, 2, posx);
-    int n = snprintf(tx_buf, sizeof(tx_buf),
-                     "roll=%s pitch=%s yaw=%s deg | ax=%s ay=%s az=%s | postitionx=%s g\r\n",
-                     r, p, y, x, yy, z, posx);
-    if(n < 0) n = 0;
-    if(n > (int)sizeof(tx_buf) - 1) n = sizeof(tx_buf) - 1;
-    tx_len = (uint8_t)n;
-    tx_pos = 0;
-}
- 
-int main(){
-    hovercraft_init();
- 
-    float yaw_deg   = 0;
-    float roll_deg  = 0;
-    float pitch_deg = 0;
-    float ax = 0;
-    float ay = 0;
-    float az = 0;
- 
-    uint32_t last_imu_ms    = start_ms;
-    uint32_t last_servo_ms  = start_ms;
-    uint32_t last_report_ms = start_ms;
 
-    float dt = 0;
-    float velocityx = 0;
-    float positionx = 0;
- 
-    while(1) {
-        uart_tx_pump();
- 
-        // ---- IMU: read when a fresh sample is available --------------------
-        bool ready = false;
-        if(imu_read(&yaw_deg, &roll_deg, &pitch_deg, &ax, &ay, &az, &dt)){
-            // PB5 LED: on while |yaw| > 85 degrees, off otherwise.
-            if(fabsf(yaw_deg) > YAW_LED_THRESHOLD_DEG){
-                DIGITAL_WRITE_HIGH(PORTB, PB5);
-            }
-            else{
-                DIGITAL_WRITE_LOW(PORTB, PB5);
-            }
+int main() {
+    lift_init();
+    uart_init();
+    uint8_t duty_percent = 0;
+    char report[] = "Lift P4: 000%\r\n";
+    const char* tx_message = "Lift P4: 000%\r\nCommands: +10%, -10%, s=stop\r\n";
+    uint8_t tx_position = 0;
+    bool report_pending = false;
 
-            velocityx += ax * dt;
-            positionx += velocityx * dt;
-            // PWM LED brightness from |X acceleration|:
-            //   < 0.11 g -> 0 %,  > 1.11 g -> 100 %,  linear in between.
-            ax = fabsf(ax);
-
-            uint8_t pwm_duty;
-            if(ax < PWM_ACCEL_OFF_G){
-                pwm_duty = 0;
+    while (1) {
+        // Handle commands before serial output so a stop is applied promptly.
+        if (UCSR0A & (1 << RXC0)) {
+            const char command = UDR0;
+            switch (command) {
+                case '+':
+                    if (duty_percent < 100) duty_percent += DUTY_STEP_PERCENT;
+                    break;
+                case '-':
+                    if (duty_percent > 0) duty_percent -= DUTY_STEP_PERCENT;
+                    break;
+                case 's':
+                case 'S':
+                    duty_percent = 0;
+                    break;
+                default:
+                    continue;  // Ignore line endings and unrecognized characters.
             }
-            else if(ax > PWM_ACCEL_FULL_G){
-                pwm_duty = 100;
-            }
-            else{
-                pwm_duty = (uint8_t)(((ax - PWM_ACCEL_OFF_G) /
-                            (PWM_ACCEL_FULL_G - PWM_ACCEL_OFF_G)) * 100.0f + 0.5f);
-            }
-            pwm_set_duty(pwm_duty);
+            lift_set_duty(duty_percent);
+            report_pending = true;
         }
- 
-        uint32_t now = timer_millis();
- 
-        // ---- Servo: update every 20 ms, no blocking -------------------------
-        if((uint32_t)(now - last_servo_ms) >= SERVO_UPDATE_MS){
-            last_servo_ms += SERVO_UPDATE_MS;   // fixed period, no drift
-            servo_set_angle(yaw_deg);
+
+        if (report_pending && tx_message[tx_position] == '\0') {
+            // Reuse the buffer after its previous line is sent. Report the latest setting.
+            report[9] = '0' + duty_percent / 100;
+            report[10] = '0' + (duty_percent / 10) % 10;
+            report[11] = '0' + duty_percent % 10;
+            tx_message = report;
+            tx_position = 0;
+            report_pending = false;
         }
- 
-        // ---- UART report: every 1.5 s ---------------------------------------
-        if((uint32_t)(now - last_report_ms) >= REPORT_PERIOD_MS && !uart_tx_busy()){
-            last_report_ms += REPORT_PERIOD_MS;
-            uart_queue_report(roll_deg, pitch_deg, yaw_deg,
-                              ax, ay, az, positionx);
+
+        // Send at most one byte per pass, keeping reception responsive.
+        if (tx_message[tx_position] != '\0' && (UCSR0A & (1 << UDRE0))) {
+            UDR0 = tx_message[tx_position++];
         }
     }
- 
-    return 0;
 }
