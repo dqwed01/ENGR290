@@ -47,23 +47,26 @@ void timer_init(){
     // Stop Timer1
     TCCR1B &= 0xF8;
 
-    TCCR1A = (1 << COM1A1) | (1 << WGM11); 
     // COM1A1: Non-inverting on PB1
-    TCCR1B = (1 << WGM13) | (1 << WGM12) | (1 << CS11);
-    // WGM13:0 = 1110: Fast PWM with TOP = ICR1.
-    // CS11: prescaler 8: 16 MHz / 8 = 2 MHz, so one tick = 0.5 µs.
+    // WGM11: low half of the mode bits (WGM13:12 are set in TCCR1B below)
+    TCCR1A = (1 << COM1A1) | (1 << WGM11);
 
     // Period: (39999 + 1) × 0.5 µs = 20 ms = 50 Hz
     ICR1 = 39999;
     // Pulse: 3000 × 0.5 µs = 1.5 ms
     OCR1A = 3000;
 
+    // WGM13:0 = 1110: Fast PWM with TOP = ICR1.
+    // CS11: prescaler 8: 16 MHz / 8 = 2 MHz, so one tick = 0.5 µs.
+    // Written last so Timer1 only starts once ICR1 and OCR1A are set
+    TCCR1B = (1 << WGM13) | (1 << WGM12) | (1 << CS11);
+
     // ------ Timer 2 (PWM for Lift and Thrust Fans) ------
     // Stop Timer2
     TCCR2B &= 0xF8;
 
     // Set Fast PWM Mode with TOP = 0xFF
-    // Set OC2B on compare match (inverting mode), OC2B at BOTTOM
+    // Set OC2B on compare match, clear OC2B at BOTTOM (inverting mode)
     TCCR2A |= (1 << COM2B1) | (1 << COM2B0) |
                 (1 << WGM21) | (1 << WGM20);
     TCNT2  = 0;
