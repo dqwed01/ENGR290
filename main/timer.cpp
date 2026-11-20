@@ -32,11 +32,11 @@ uint32_t timer_millis(){
 void timer_init(){
     //Timer 0
     //ISR
+    
     //Stop Timer
     TCCR0B &= 0xF8;
     OCR0B = 250;
-    //clear stale flags
-    TIFR0 = ~1;
+
     //Interrupt on OCR2B Match
     TIMSK0 = (1 << OCIE0B);
 
