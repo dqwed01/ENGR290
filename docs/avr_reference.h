@@ -179,7 +179,7 @@
 #undef PB3
 /**
  * Port B bit 3 = Nano D11. Also OC2A (Timer2 compare A PWM output) and SPI MOSI.
- * Unused in this project: Timer2 uses OCR2A as TOP (mode 7), so OC2A can't output a duty cycle.
+ * This project: LIFT_FAN_PWM (OC2A, phase-correct PWM at 31.4 kHz).
  */
 #define PB3 PORTB3
 
@@ -247,7 +247,7 @@
 #undef PD3
 /**
  * Port D bit 3 = Nano D3. Also OC2B (Timer2 compare B output) and INT1.
- * This project: FAN_PWM (OC2B, fast PWM at 25 kHz).
+ * This project: THRUST_FAN_PWM (OC2B, phase-correct PWM at 31.4 kHz).
  */
 #define PD3 PORTD3
 
@@ -572,7 +572,7 @@
 #define ICES1 6
 
 /* ==========================================================================
- * Timer/Counter2 (8-bit): fan PWM
+ * Timer/Counter2 (8-bit): lift and thrust fan PWM
  * ========================================================================== */
 
 #undef TCCR2A
@@ -584,9 +584,8 @@
  *                5 Phase-correct (TOP=OCR2A)  7 Fast PWM (TOP=OCR2A)
  * PWM COM bits: 10 non-inverting, 11 inverting, 00 pin disconnected.
  * Phase-correct non-inverting: clear on match counting up, set on match counting down.
- * This project: WGM21 | WGM20 (+ WGM22 in TCCR2B) -> mode 7, Fast PWM with TOP = OCR2A.
- * COM2B1 (non-inverting on PD3) is set and cleared by pwm_set_fan_speed(), not here.
- * Using OCR2A as TOP leaves only OC2B for a fan.
+ * This project: WGM20 | COM2A1 | COM2B1 -> mode 1, non-inverting PWM on both fan pins
+ * (PB3 lift, PD3 thrust). Modes 5/7 would use OCR2A as TOP, leaving only OC2B for a fan.
  */
 #define TCCR2A _SFR_MEM8(0xB0)
 
@@ -597,7 +596,7 @@
  * bits 2:0 CS22:20: clock select. NOTE: Timer2's table differs from Timer0/1:
  *    0 stopped  1 /1  2 /8  3 /32  4 /64  5 /128  6 /256  7 /1024   (no external clock)
  * Phase-correct period = 2*TOP ticks (up 255 steps, down 255 steps); Fast PWM = TOP+1 ticks.
- * This project: WGM22 | CS21 -> mode 7, /8 -> fast PWM at 16 MHz / (8 * (79 + 1)) = 25 kHz.
+ * This project: CS20 -> /1 -> phase-correct PWM at 16 MHz / (2*255) = 31.4 kHz.
  */
 #define TCCR2B _SFR_MEM8(0xB1)
 
@@ -613,22 +612,21 @@
  * Phase-correct non-inverting: duty = OCR2A / 255. 0 = solid low, 255 = solid high.
  * (Fast PWM gives (OCR2A + 1) / 256 instead, so 0 still leaves a 1-tick spike.)
  * In modes 5 and 7 it is TOP instead of a duty value.
- * This project: TOP = FAN_PWM_TOP (79) for a 25 kHz period, not a duty value.
+ * This project: lift fan duty, written by pwm_set_fan_speed(&OCR2A, percent).
  */
 #define OCR2A _SFR_MEM8(0xB3)
 
 #undef OCR2B
 /**
  * Output Compare Register 2B (8-bit): PWM duty for OC2B (PD3/D3).
- * Fast PWM non-inverting with TOP = OCR2A: duty = (OCR2B + 1) / (OCR2A + 1).
- * This project: fan duty, 0..79 (FAN_PWM_TOP = 100%). pwm_set_fan_speed() writes it.
- * 0% clears COM2B1 instead, since OCR2B = 0 would still give a 1-tick spike.
+ * Phase-correct non-inverting: duty = OCR2B / 255. 0 = solid low, 255 = solid high.
+ * This project: thrust fan duty. main.ino sets it from |ax| via pwm_set_fan_speed(&OCR2B, percent).
  */
 #define OCR2B _SFR_MEM8(0xB4)
 
 #undef COM2A1
 /**
- * TCCR2A bit 7. COM2A1:0 = 10 -> non-inverting PWM on OC2A (PB3/D11). Not set in this project.
+ * TCCR2A bit 7. COM2A1:0 = 10 -> non-inverting PWM on OC2A (PB3/D11), the lift fan.
  */
 #define COM2A1 7
 
@@ -640,8 +638,7 @@
 
 #undef COM2B1
 /**
- * TCCR2A bit 5. COM2B1:0 = 10 -> non-inverting PWM on OC2B (PD3/D3), the fan.
- * This project: pwm_set_fan_speed() sets it for >0% and clears it for 0%.
+ * TCCR2A bit 5. COM2B1:0 = 10 -> non-inverting PWM on OC2B (PD3/D3), the thrust fan.
  */
 #define COM2B1 5
 
@@ -653,19 +650,19 @@
 
 #undef WGM21
 /**
- * TCCR2A bit 1. Waveform mode bit 1. WGM22:0 = 111 -> Fast PWM, TOP = OCR2A (this project).
+ * TCCR2A bit 1. Waveform mode bit 1. WGM22:0 = 011 -> Fast PWM, TOP 0xFF. Not set in this project.
  */
 #define WGM21 1
 
 #undef WGM20
 /**
- * TCCR2A bit 0. Waveform mode bit 0. WGM22:0 = 111 -> Fast PWM, TOP = OCR2A (this project).
+ * TCCR2A bit 0. Waveform mode bit 0. WGM22:0 = 001 -> Phase-correct PWM, TOP 0xFF (this project).
  */
 #define WGM20 0
 
 #undef WGM22
 /**
- * TCCR2B bit 3. Waveform mode bit 2. Set in this project (mode 7, TOP = OCR2A).
+ * TCCR2B bit 3. Waveform mode bit 2.
  */
 #define WGM22 3
 
@@ -677,13 +674,13 @@
 
 #undef CS21
 /**
- * TCCR2B bit 1. Clock Select bit 1. CS22:20 = 010 -> clk/8 (this project).
+ * TCCR2B bit 1. Clock Select bit 1. CS22:20 = 010 -> clk/8.
  */
 #define CS21 1
 
 #undef CS20
 /**
- * TCCR2B bit 0. Clock Select bit 0. CS22:20 = 001 -> clk/1, 011 -> clk/32.
+ * TCCR2B bit 0. Clock Select bit 0. CS22:20 = 001 -> clk/1 (this project), 011 -> clk/32.
  */
 #define CS20 0
 
