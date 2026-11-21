@@ -21,7 +21,6 @@
 #include "src/imu.h"
  
 // ---- Tunable behaviour -----------------------------------------------------
-#define YAW_LED_THRESHOLD_DEG 85.0f   // PB5 LED on when |yaw| exceeds this
 #define PWM_ACCEL_OFF_G       0.11f   // |ax| below this  -> 0 %   duty
 #define PWM_ACCEL_FULL_G      1.11f   // |ax| above this  -> 100 % duty
 #define SERVO_UPDATE_MS       20UL    // servo angle refresh period
@@ -88,14 +87,6 @@ int main(){
         // ---- IMU: read when a fresh sample is available --------------------
         bool ready = false;
         if(imu_read(&yaw_deg, &roll_deg, &pitch_deg, &ax, &ay, &az, &dt)){
-            // PB5 LED: on while |yaw| > 85 degrees, off otherwise.
-            if(fabsf(yaw_deg) > YAW_LED_THRESHOLD_DEG){
-                DIGITAL_WRITE_HIGH(PORTB, PB5);
-            }
-            else{
-                DIGITAL_WRITE_LOW(PORTB, PB5);
-            }
-
             velocityx += ax * dt;
             positionx += velocityx * dt;
             // PWM LED brightness from |X acceleration|:

@@ -33,9 +33,6 @@ to break. This could be due to lack of battery ? To be tested
 #else
     // adc_init();
 #endif
-    DIGITAL_WRITE_HIGH(DDRB, YAW_LED);   // set yaw indicator LED as output
-    DIGITAL_WRITE_LOW(PORTB, YAW_LED);   // start in the off state
-
     mpu6050_init();
     mpu6050_set_gyro_range(MPU6050_GYRO_250_DPS);
     mpu6050_set_accel_range(MPU6050_ACCEL_2G);
