@@ -1,9 +1,6 @@
 #ifndef PINS_H
 #define PINS_H
 
-//Indicator LED
-#define YAW_LED PB5
-
 //PWM Pins
 #define PWM0 PB3
 
