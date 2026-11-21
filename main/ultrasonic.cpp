@@ -17,7 +17,7 @@ static char debug_message[64] = {0};
 #endif
 
 void us_sensor_init(){
-    DDRB |= ((OUTPUT<<US1_TRIG) | (OUTPUT<<PB5)); //Set TRIG pin to Output
+    DDRB |= (OUTPUT<<US1_TRIG); //Set TRIG pin to Output
     DIGITAL_WRITE_LOW(PORTB, US1_TRIG);
     DDRB &= ~((1)<<US1_ECHO); 
 }
