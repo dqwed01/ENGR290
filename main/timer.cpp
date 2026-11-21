@@ -66,16 +66,15 @@ void timer_init(){
     // Stop Timer2
     TCCR2B &= 0xF8;
 
-    // WGM22:20 = 111: Set Fast PWM Mode with TOP = OCR2A
-    // set_fan_duty() sets COM2B1: Non-inverting on PD3
-    TCCR2A |= (1 << WGM21) | (1 << WGM20);
+    // WGM22:20 = 001: Phase Correct PWM with TOP = 0xFF
+    // 16 MHz / (255*2) = 31.4 kHz, close to the 25 kHz we want. 
+    TCCR2A |= (1 << WGM20);
 
-    // 25 kHz PWM frequency: (16 MHz / 8) / (79 + 1) = 25 kHz
-    OCR2A = FAN_PWM_TOP;
-    
-    // Set initial duty cycle to 0% (0/79)
-    // OCR2B = 0; // not actually necessary since the pin is disconnected when duty cycle is 0%
+    // Non-inverting on PB3 and PD3 
+    TCCR2A |= (1 << COM2A1) | (1 << COM2B1);
 
-    // Timer2 Prescaler of 8
-    TCCR2B |= (1 << WGM22) | (1 << CS21);
+    OCR2A = OCR2B = 0; // start with 0% duty cycle
+
+    // Timer2 Prescaler of 1
+    TCCR2B |= (1 << CS20);
 }

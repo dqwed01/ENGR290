@@ -3,7 +3,8 @@
 
 //PWM Pins
 #define SERVO_PWM PB1 // OC1A
-#define FAN_PWM PD3   // OC2B
+#define LIFT_FAN_PWM PB3   // OC2A
+#define THRUST_FAN_PWM PD3   // OC2B
 
 //IR Pins
 #define IR_SENSOR1_PIN 0
