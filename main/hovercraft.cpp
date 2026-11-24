@@ -14,10 +14,6 @@
 #include "src/global.h"
 #include "src/imu.h"
 
-#ifdef DEBUGGING
-static char debug_message[64] = {0};
-#endif
-
 void hovercraft_init(){
     cli();
     UART_init();

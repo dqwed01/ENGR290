@@ -7,7 +7,7 @@
 #define US_TIMEOUT_US   (US_MAX_CM * 58U)   // echo pulse is ~58 µs per cm (U: int is 16-bit on AVR)
 
 // us_read() return values that aren't distances
-#define US_NO_READING   -1.0f               // sensor busy or not responding
+#define US_NO_READING   (-1.0f)             // sensor busy or not responding
 #define US_OUT_OF_RANGE ((float)US_MAX_CM + 1.0f) // nothing within US_MAX_CM
 
 void us_sensor_init();

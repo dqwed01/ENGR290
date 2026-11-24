@@ -12,6 +12,10 @@
 #include "src/timer.h"
 #include "src/global.h"
 
+#ifdef DEBUGGING
+static char debug_message[64] = {0};
+#endif
+
 void adc_init(){
     //Prescaler of 128 (125kHz ADC clock for 16MHz system clock)
     ADCSRA = (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);
@@ -35,6 +39,7 @@ float ifr_read(uint8_t pin){
     char num[7];
     dtostrf(distance_cm, 1, 2, num);
     sprintf(debug_message, "ifr_read: %s cm\n", num);
+    UART_transmit(debug_message);
 #endif
     return distance_cm;
 }

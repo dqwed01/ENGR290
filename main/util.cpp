@@ -8,10 +8,6 @@
 #include "src/util.h"
 #include "src/global.h"
 
-#ifdef DEBUGGING
-static char debug_message[64] = {0};
-#endif
-
 uint16_t adc_read(uint8_t pin){
     if(pin >= 8){
         return 0xFFFF; //Invalid ADC pin

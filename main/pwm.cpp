@@ -5,10 +5,6 @@
 #include "src/pwm.h"
 #include "src/global.h"
 
-#ifdef DEBUGGING
-static char debug_message[64] = {0};
-#endif
-
 void pwm_init(void){
     DIGITAL_WRITE_HIGH(DDRB, SERVO_PWM);       // PB1 output
     DIGITAL_WRITE_LOW(PORTB, SERVO_PWM);       // idle low
