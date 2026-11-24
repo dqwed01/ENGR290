@@ -21,6 +21,24 @@ uint32_t timer_millis(){
     return ms;
 }
 
+// µs since timer_init(). 4 µs resolution (prescaler 64). Wraps after ~71 min.
+uint32_t timer_micros(){
+    uint8_t sreg = SREG;
+    cli();
+    uint32_t ms   = ms_ticks;
+    uint8_t  t    = TCNT0;
+    uint8_t  next = OCR0B;              // next compare point
+    uint8_t  since = t - next + 250;    // ticks since last compare, 0..249
+
+    // Compare matched but the ISR hasn't run yet (we're inside cli()).
+    // (t - next) < 128 means TCNT0 is past the match, not just before it.
+    if ((TIFR0 & (1 << OCF0B)) && (uint8_t)(t - next) < 128) {
+        ms++;
+        since = t - next;
+    }
+    SREG = sreg;
+    return ms * 1000UL + since * 4U;
+}
 
 void timer_init(){
     // ------ Timer 0 (1ms Interrupt) ------
