@@ -19,6 +19,8 @@
 static char debug_message[64] = {0};
 #endif
 
+static hovercraft_modes mode = HOVERCRAFT_MOVING;
+
 void hovercraft_init(){
     cli();
     UART_init();
@@ -43,4 +45,21 @@ to break. This could be due to lack of battery ? To be tested
     mpu6050_calibrate_gyro(500);
     start_ms = timer_millis();
     sei();
+}
+
+void hovercraft_act(){
+    float yaw_deg   = 0;
+    float roll_deg  = 0;
+    float pitch_deg = 0;
+    float ax = 0;
+    float ay = 0;
+    float az = 0;
+    imu_read(&yaw_deg, &roll_deg, &pitch_deg, &ax, &ay, &az, &dt);
+    float h_ifr_distance[2] = {0};
+    h_ifr_distance[0] = ifr_read(0);
+    h_ifr_distance[1] = ifr_read(1);
+
+
+
+    switch()
 }

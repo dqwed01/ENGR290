@@ -1,7 +1,12 @@
 #ifndef HOVERCRAFT_H
 #define HOVERCRAFT_H
 
-void hovercraft_init();
+typedef enum{
+    HOVERCRAFT_MOVING,
+    HOVERCRAFT_TURNING
+} hovercraft_modes;
 
+void hovercraft_init();
+void hovercraft_act();
 
 #endif

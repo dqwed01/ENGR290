@@ -85,53 +85,54 @@ int main(){
     float positionx = 0;
  
     while(1) {
-        uart_tx_pump();
+        // uart_tx_pump();
  
-        // ---- IMU: read when a fresh sample is available --------------------
-        bool ready = false;
-        if(imu_read(&yaw_deg, &roll_deg, &pitch_deg, &ax, &ay, &az, &dt)){
-            // PB5 LED: on while |yaw| > 85 degrees, off otherwise.
-            if(fabsf(yaw_deg) > YAW_LED_THRESHOLD_DEG){
-                DIGITAL_WRITE_HIGH(PORTB, PB5);
-            }
-            else{
-                DIGITAL_WRITE_LOW(PORTB, PB5);
-            }
+        // // ---- IMU: read when a fresh sample is available --------------------
+        // bool ready = false;
+        // if(imu_read(&yaw_deg, &roll_deg, &pitch_deg, &ax, &ay, &az, &dt)){
+        //     // PB5 LED: on while |yaw| > 85 degrees, off otherwise.
+        //     if(fabsf(yaw_deg) > YAW_LED_THRESHOLD_DEG){
+        //         DIGITAL_WRITE_HIGH(PORTB, PB5);
+        //     }
+        //     else{
+        //         DIGITAL_WRITE_LOW(PORTB, PB5);
+        //     }
 
-            velocityx += ax * dt;
-            positionx += velocityx * dt;
-            // PWM LED brightness from |X acceleration|:
-            //   < 0.11 g -> 0 %,  > 1.11 g -> 100 %,  linear in between.
-            ax = fabsf(ax);
+        //     velocityx += ax * dt;
+        //     positionx += velocityx * dt;
+        //     // PWM LED brightness from |X acceleration|:
+        //     //   < 0.11 g -> 0 %,  > 1.11 g -> 100 %,  linear in between.
+        //     ax = fabsf(ax);
 
-            uint8_t pwm_duty;
-            if(ax < PWM_ACCEL_OFF_G){
-                pwm_duty = 0;
-            }
-            else if(ax > PWM_ACCEL_FULL_G){
-                pwm_duty = 100;
-            }
-            else{
-                pwm_duty = (uint8_t)(((ax - PWM_ACCEL_OFF_G) /
-                            (PWM_ACCEL_FULL_G - PWM_ACCEL_OFF_G)) * 100.0f + 0.5f);
-            }
-            pwm_set_duty(pwm_duty);
-        }
+        //     uint8_t pwm_duty;
+        //     if(ax < PWM_ACCEL_OFF_G){
+        //         pwm_duty = 0;
+        //     }
+        //     else if(ax > PWM_ACCEL_FULL_G){
+        //         pwm_duty = 100;
+        //     }
+        //     else{
+        //         pwm_duty = (uint8_t)(((ax - PWM_ACCEL_OFF_G) /
+        //                     (PWM_ACCEL_FULL_G - PWM_ACCEL_OFF_G)) * 100.0f + 0.5f);
+        //     }
+        //     pwm_set_duty(pwm_duty);
+        // }
  
-        uint32_t now = timer_millis();
+        // uint32_t now = timer_millis();
  
-        // ---- Servo: update every 20 ms, no blocking -------------------------
-        if((uint32_t)(now - last_servo_ms) >= SERVO_UPDATE_MS){
-            last_servo_ms += SERVO_UPDATE_MS;   // fixed period, no drift
-            servo_set_angle(yaw_deg);
-        }
+        // // ---- Servo: update every 20 ms, no blocking -------------------------
+        // if((uint32_t)(now - last_servo_ms) >= SERVO_UPDATE_MS){
+        //     last_servo_ms += SERVO_UPDATE_MS;   // fixed period, no drift
+        //     servo_set_angle(yaw_deg);
+        // }
  
-        // ---- UART report: every 1.5 s ---------------------------------------
-        if((uint32_t)(now - last_report_ms) >= REPORT_PERIOD_MS && !uart_tx_busy()){
-            last_report_ms += REPORT_PERIOD_MS;
-            uart_queue_report(roll_deg, pitch_deg, yaw_deg,
-                              ax, ay, az, positionx);
-        }
+        // // ---- UART report: every 1.5 s ---------------------------------------
+        // if((uint32_t)(now - last_report_ms) >= REPORT_PERIOD_MS && !uart_tx_busy()){
+        //     last_report_ms += REPORT_PERIOD_MS;
+        //     uart_queue_report(roll_deg, pitch_deg, yaw_deg,
+        //                       ax, ay, az, positionx);
+        // }
+        hovercraft_act();
     }
  
     return 0;
