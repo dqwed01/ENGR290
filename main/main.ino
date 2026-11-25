@@ -58,7 +58,7 @@ int main(){
                 pwm_duty = (uint8_t)(((ax - PWM_ACCEL_OFF_G) /
                             (PWM_ACCEL_FULL_G - PWM_ACCEL_OFF_G)) * 100.0f + 0.5f);
             }
-            pwm_set_fan_speed(&OCR2B, pwm_duty);
+            pwm_set_duty(&OCR2B, FAN_PWM_TOP, pwm_duty);
         }
  
         uint32_t now = timer_millis();

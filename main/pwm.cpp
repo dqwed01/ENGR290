@@ -17,9 +17,9 @@ void pwm_init(void){
     DIGITAL_WRITE_LOW(PORTD, THRUST_FAN_PWM);  // idle low
 }
 
-void pwm_set_fan_speed(volatile uint8_t* OCR2x, uint8_t percent){
+void pwm_set_duty(volatile uint8_t* OCRx, uint8_t top, uint8_t percent){
     if(percent > 100) percent = 100;
 
-    // Thankfully, Phase Correct mode does not cause issues when OCR2x is set to 0 or 255
-    *OCR2x = (uint8_t)((FAN_PWM_TOP * percent) / 100);
+    // Thankfully, Phase Correct mode does not cause issues when the OCR is set to 0 or 255
+    *OCRx = (uint8_t)((top * percent) / 100);
 }
