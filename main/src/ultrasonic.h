@@ -3,7 +3,7 @@
 
 // Farthest distance we care about (bar distance + margin). Keeps us_read()
 // from blocking for the sensor's full ~4 m range. Must be <= 1129.
-#define US_MAX_CM       100
+#define US_MAX_CM       35
 #define US_TIMEOUT_US   (US_MAX_CM * 58U)   // echo pulse is ~58 µs per cm (U: int is 16-bit on AVR)
 
 // us_read() return values that aren't distances
