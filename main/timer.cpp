@@ -9,7 +9,7 @@
 static volatile uint32_t ms_ticks = 0;
 
 ISR(TIMER0_COMPB_vect){ //Triggers every 1ms (250 ticks * 4 us at prescaler 64)
-    OCR0B += 250;
+    OCR0B += TICKS_1MS_64_PRESCALE;
     ms_ticks++;
 }
 
@@ -28,7 +28,7 @@ uint32_t timer_micros(){
     uint32_t ms   = ms_ticks;
     uint8_t  t    = TCNT0;
     uint8_t  next = OCR0B;              // next compare point
-    uint8_t  since = t - next + 250;    // ticks since last compare, 0..249
+    uint8_t  since = t - next + TICKS_1MS_64_PRESCALE;    // ticks since last compare, 0..249
 
     // Compare matched but the ISR hasn't run yet (we're inside cli()).
     // (t - next) < 128 means TCNT0 is past the match, not just before it.
@@ -51,7 +51,7 @@ void timer_init(){
     TCCR0A = 0;
 
     // Set Compare Match Register for 1ms increments
-    OCR0B = 250;
+    OCR0B = TICKS_1MS_64_PRESCALE;
 
     //Interrupt on OCR0B Match
     TIMSK0 = (1 << OCIE0B);

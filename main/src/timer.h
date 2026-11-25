@@ -3,8 +3,6 @@
 
 #include <stdint.h>
 
-#define TICKS_1MS_64_PRESCALE 250
-
 void timer_init();
 
 // Milliseconds since timer_init(), counted by the Timer0 compare-B ISR.
