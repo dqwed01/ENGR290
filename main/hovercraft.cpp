@@ -45,6 +45,8 @@ void hovercraft_init(){
 }
 
 void hovercraft_act(){
+    float h_ifr_distance[2] = {0};
+    float us_distance = 0;
     float yaw_deg   = 0;
     float roll_deg  = 0;
     float pitch_deg = 0;
@@ -52,16 +54,21 @@ void hovercraft_act(){
     float ay = 0;
     float az = 0;
     float dt = 0;
+
     imu_read(&yaw_deg, &roll_deg, &pitch_deg, &ax, &ay, &az, &dt);
-    float h_ifr_distance[2] = {0};
     h_ifr_distance[0] = ifr_read(0);
     h_ifr_distance[1] = ifr_read(1);
-    float us_distance = 0;
-
     us_distance = us_read();
+
     uart_report_update(timer_millis(), roll_deg, pitch_deg, yaw_deg, ax, ay, az, h_ifr_distance[0], h_ifr_distance[1], us_distance);
+    if(us_distance <= BAR_DISTANCE_CM){
+        //Add code to turn off Lift Fan here
+        delay_ms(5000);
+        return;
+    }
     switch(mode){
         case HOVERCRAFT_MOVING:
+            
             break;
 
         case HOVERCRAFT_TURNING:
