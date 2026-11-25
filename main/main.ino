@@ -40,21 +40,24 @@ int main(){
     float positionx = 0;
  
     while(1) {
-        pwm_set_duty(&OCR0A, 255, 10);
+        pwm_set_duty(&OCR0A, 255, 80); // set lift fan
         _delay_ms(5000);
-        pwm_set_duty(&OCR0A, 255, 20);
+
+        pwm_set_duty(&OCR0B, 255, 10); // set thrust fan
         _delay_ms(5000);
-        pwm_set_duty(&OCR0A, 255, 30);
+        pwm_set_duty(&OCR0B, 255, 20);
         _delay_ms(5000);
-        pwm_set_duty(&OCR0A, 255, 40);
+        pwm_set_duty(&OCR0B, 255, 30);
         _delay_ms(5000);
-        pwm_set_duty(&OCR0A, 255, 50);
+        pwm_set_duty(&OCR0B, 255, 40);
         _delay_ms(5000);
-        pwm_set_duty(&OCR0A, 255, 60);
+        pwm_set_duty(&OCR0B, 255, 50);
         _delay_ms(5000);
-        pwm_set_duty(&OCR0A, 255, 80);
+        pwm_set_duty(&OCR0B, 255, 60);
         _delay_ms(5000);
-        pwm_set_duty(&OCR0A, 255, 100);
+        pwm_set_duty(&OCR0B, 255, 80);
+        _delay_ms(5000);
+        pwm_set_duty(&OCR0B, 255, 100);
         _delay_ms(5000);
     }
  
