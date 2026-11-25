@@ -4,7 +4,7 @@
 #include <avr/interrupt.h>
 
 #include "src/timer.h"
-#include "src/pwm.h"
+#include "src/servo.h"
 
 static volatile uint32_t ms_ticks = 0;
 

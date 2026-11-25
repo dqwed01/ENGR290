@@ -11,6 +11,7 @@
 #include "src/util.h"
 #include "src/timer.h"
 #include "src/pwm.h"
+#include "src/servo.h"
 #include "src/global.h"
 #include "src/imu.h"
 #include "src/uart.h"
@@ -65,7 +66,7 @@ int main(){
         // ---- Servo: update every 20 ms, no blocking -------------------------
         if((uint32_t)(now - last_servo_ms) >= SERVO_UPDATE_MS){
             last_servo_ms += SERVO_UPDATE_MS;   // fixed period, no drift
-            pwm_set_servo_angle(yaw_deg);
+            servo_set_angle(yaw_deg);
         }
  
         uart_report_update(now, roll_deg, pitch_deg, yaw_deg,

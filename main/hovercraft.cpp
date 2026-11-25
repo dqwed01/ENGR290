@@ -11,6 +11,7 @@
 #include "src/timer.h"
 #include "src/infrared.h"
 #include "src/pwm.h"
+#include "src/servo.h"
 #include "src/global.h"
 #include "src/imu.h"
 
@@ -22,6 +23,7 @@ void hovercraft_init(){
     cli();
     UART_init();
     pwm_init();
+    servo_init();
     timer_init();
 /*
 This ifdef should eventually be removed.

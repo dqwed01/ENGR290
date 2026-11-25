@@ -10,21 +10,11 @@ static char debug_message[64] = {0};
 #endif
 
 void pwm_init(void){
-    DIGITAL_WRITE_HIGH(DDRB, SERVO_PWM);       // PB1 output
-    DIGITAL_WRITE_LOW(PORTB, SERVO_PWM);       // idle low
-
     DIGITAL_WRITE_HIGH(DDRB, LIFT_FAN_PWM);    // PB3 output
     DIGITAL_WRITE_LOW(PORTB, LIFT_FAN_PWM);    // idle low
 
     DIGITAL_WRITE_HIGH(DDRD, THRUST_FAN_PWM);  // PD3 output
     DIGITAL_WRITE_LOW(PORTD, THRUST_FAN_PWM);  // idle low
-}
-
-void pwm_set_servo_angle(float angle){
-    if(angle > 80.0) angle = 80.0;
-    if(angle < -80.0) angle = -80.0;
-
-    OCR1A = (uint16_t)(SERVO_PWM_CENTER + angle * 20.0);
 }
 
 void pwm_set_fan_speed(volatile uint8_t* OCR2x, uint8_t percent){
