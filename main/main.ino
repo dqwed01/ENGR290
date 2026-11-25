@@ -15,6 +15,7 @@
 #include "src/global.h"
 #include "src/imu.h"
 #include "src/uart.h"
+#include <util/delay.h>
  
 // ---- Tunable behaviour -----------------------------------------------------
 #define PWM_ACCEL_OFF_G       0.11f   // |ax| below this  -> 0 %   duty
@@ -39,38 +40,22 @@ int main(){
     float positionx = 0;
  
     while(1) {
-        // ---- IMU: read when a fresh sample is available --------------------
-        if(imu_read(&yaw_deg, &roll_deg, &pitch_deg, &ax, &ay, &az, &dt)){
-            velocityx += ax * dt;
-            positionx += velocityx * dt;
-            // PWM LED brightness from |X acceleration|:
-            //   < 0.11 g -> 0 %,  > 1.11 g -> 100 %,  linear in between.
-            ax = fabsf(ax);
-
-            uint8_t pwm_duty;
-            if(ax < PWM_ACCEL_OFF_G){
-                pwm_duty = 0;
-            }
-            else if(ax > PWM_ACCEL_FULL_G){
-                pwm_duty = 100;
-            }
-            else{
-                pwm_duty = (uint8_t)(((ax - PWM_ACCEL_OFF_G) /
-                            (PWM_ACCEL_FULL_G - PWM_ACCEL_OFF_G)) * 100.0f + 0.5f);
-            }
-            pwm_set_duty(&OCR2B, FAN_PWM_TOP, pwm_duty);
-        }
- 
-        uint32_t now = timer_millis();
- 
-        // ---- Servo: update every 20 ms, no blocking -------------------------
-        if((uint32_t)(now - last_servo_ms) >= SERVO_UPDATE_MS){
-            last_servo_ms += SERVO_UPDATE_MS;   // fixed period, no drift
-            servo_set_angle(yaw_deg);
-        }
- 
-        uart_report_update(now, roll_deg, pitch_deg, yaw_deg,
-                           ax, ay, az, positionx);
+        pwm_set_duty(&OCR0A, 255, 10);
+        _delay_ms(5000);
+        pwm_set_duty(&OCR0A, 255, 20);
+        _delay_ms(5000);
+        pwm_set_duty(&OCR0A, 255, 30);
+        _delay_ms(5000);
+        pwm_set_duty(&OCR0A, 255, 40);
+        _delay_ms(5000);
+        pwm_set_duty(&OCR0A, 255, 50);
+        _delay_ms(5000);
+        pwm_set_duty(&OCR0A, 255, 60);
+        _delay_ms(5000);
+        pwm_set_duty(&OCR0A, 255, 80);
+        _delay_ms(5000);
+        pwm_set_duty(&OCR0A, 255, 100);
+        _delay_ms(5000);
     }
  
     return 0;
