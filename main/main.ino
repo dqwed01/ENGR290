@@ -11,10 +11,13 @@
 #include "src/util.h"
 #include "src/timer.h"
 #include "src/pwm.h"
+#include "src/pins.h"
 #include "src/servo.h"
 #include "src/global.h"
 #include "src/imu.h"
 #include "src/uart.h"
+#include "src/ultrasonic.h"
+#include "src/infrared.h"
 #include <util/delay.h>
  
 // ---- Tunable behaviour -----------------------------------------------------
@@ -40,25 +43,8 @@ int main(){
     float positionx = 0;
  
     while(1) {
-        pwm_set_duty(&OCR0A, 255, 80); // set lift fan
-        _delay_ms(5000);
-
-        pwm_set_duty(&OCR0B, 255, 10); // set thrust fan
-        _delay_ms(5000);
-        pwm_set_duty(&OCR0B, 255, 20);
-        _delay_ms(5000);
-        pwm_set_duty(&OCR0B, 255, 30);
-        _delay_ms(5000);
-        pwm_set_duty(&OCR0B, 255, 40);
-        _delay_ms(5000);
-        pwm_set_duty(&OCR0B, 255, 50);
-        _delay_ms(5000);
-        pwm_set_duty(&OCR0B, 255, 60);
-        _delay_ms(5000);
-        pwm_set_duty(&OCR0B, 255, 80);
-        _delay_ms(5000);
-        pwm_set_duty(&OCR0B, 255, 100);
-        _delay_ms(5000);
+        ifr_read(IR_SENSOR1_PIN);
+        ifr_read(IR_SENSOR2_PIN);
     }
  
     return 0;
