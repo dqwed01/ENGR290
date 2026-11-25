@@ -17,6 +17,6 @@ void uart_report_init(uint32_t start_ms);
 // Call once per main-loop iteration. Sends at most one queued byte without
 // waiting and queues a fresh report every 1.5 s when the buffer is available.
 void uart_report_update(uint32_t now, float roll, float pitch, float yaw,
-                        float ax, float ay, float az, float positionx);
+                        float ax, float ay, float az, float ifr1, float ifr2, float us);
 
 #endif

@@ -14,7 +14,7 @@
 static char debug_message[64] = {0};
 #endif
 
-uint16_t read_pulse(volatile uint8_t* p_port, uint8_t pin, uint8_t value, uint16_t timeout_in_ticks){
+uint16_t read_pulse(uint8_t pin, uint8_t value, uint16_t timeout_in_ticks){
     uint16_t time_elapsed = 0;
 
     //Wait for pin to reach value
@@ -26,7 +26,7 @@ uint16_t read_pulse(volatile uint8_t* p_port, uint8_t pin, uint8_t value, uint16
 #endif
             return 0xFFFF; //Highest Time elapsed to prevent early collisions
         } 
-    } while ((DIGITAL_READ(*p_port, pin)) != value);
+    } while ((DIGITAL_READ(PINB, pin)) != value);
 
     //Start counting and wait for pin to go Low or until timeout is reached
     uint16_t max_overflows = timeout_in_ticks >> 8;   // 3750 -> 14 (about 57 ms)
@@ -37,7 +37,7 @@ uint16_t read_pulse(volatile uint8_t* p_port, uint8_t pin, uint8_t value, uint16
     TIFR0 = (1 << TOV0);
     TCCR0B = (1 << CS02);                   // prescaler 256 -> 16 us/tick
 
-    while (DIGITAL_READ(*p_port, pin) == value) {
+    while (DIGITAL_READ(PINB, pin) == value) {
         if (TIFR0 & (1 << TOV0)) {
             TIFR0 = (1 << TOV0);
             if (++overflows >= max_overflows) {
@@ -58,10 +58,6 @@ uint16_t read_pulse(volatile uint8_t* p_port, uint8_t pin, uint8_t value, uint16
         overflows++;
     }
     uint16_t pulse = (overflows << 8) | low;
-#ifdef DEBUGGING
-    sprintf(debug_message, "read_pulse: pulse %d\n", pulse);
-    UART_transmit(debug_message);
-#endif
     return (overflows << 8) | low;
 }
 
@@ -89,11 +85,6 @@ uint16_t adc_read(uint8_t pin){
             return 0xFFFF;
         }
     } while (DIGITAL_READ(ADCSRA, ADSC));
-
-#ifdef DEBUGGING
-    sprintf(message, "ADC %d\n", ADC);
-    UART_transmit(message);
-#endif
 
     uint16_t value = ADCL;
     value |= (ADCH << 8);

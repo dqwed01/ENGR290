@@ -41,8 +41,8 @@ int main(){
  
     while(1) {
         hovercraft_act();
-        uart_report_update(now, roll_deg, pitch_deg, yaw_deg,
-                           ax, ay, az, positionx);
+        // uart_report_update(now, roll_deg, pitch_deg, yaw_deg,
+        //                    ax, ay, az, positionx);
     }
  
     return 0;

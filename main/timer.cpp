@@ -70,9 +70,6 @@ void timer_init(){
                 (1 << WGM21) | (1 << WGM20);
     TCNT2  = 0;
 
-    //Note: If you modify this you'll also have to modify the ISR in servo.cpp
-    // OCR2A = 20;
-
     //Timer2 Prescaler of 8      
     TCCR2B |= (1 << CS21);
 }

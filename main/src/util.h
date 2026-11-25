@@ -18,6 +18,6 @@
 
 
 //Return the length of how long a pulse lasted
-uint16_t read_pulse(volatile uint8_t*, uint8_t, uint8_t, uint16_t);
+uint16_t read_pulse(uint8_t, uint8_t, uint16_t);
 uint16_t adc_read(uint8_t);
 #endif
