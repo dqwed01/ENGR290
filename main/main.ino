@@ -11,6 +11,7 @@
 #include "src/util.h"
 #include "src/timer.h"
 #include "src/pwm.h"
+#include "src/servo.h"
 #include "src/global.h"
 #include "src/imu.h"
 #include "src/uart.h"
@@ -57,7 +58,7 @@ int main(){
                 pwm_duty = (uint8_t)(((ax - PWM_ACCEL_OFF_G) /
                             (PWM_ACCEL_FULL_G - PWM_ACCEL_OFF_G)) * 100.0f + 0.5f);
             }
-            pwm_set_fan_speed(&OCR2B, pwm_duty);
+            pwm_set_duty(&OCR2B, FAN_PWM_TOP, pwm_duty);
         }
  
         uint32_t now = timer_millis();
@@ -65,7 +66,7 @@ int main(){
         // ---- Servo: update every 20 ms, no blocking -------------------------
         if((uint32_t)(now - last_servo_ms) >= SERVO_UPDATE_MS){
             last_servo_ms += SERVO_UPDATE_MS;   // fixed period, no drift
-            pwm_set_servo_angle(yaw_deg);
+            servo_set_angle(yaw_deg);
         }
  
         uart_report_update(now, roll_deg, pitch_deg, yaw_deg,
