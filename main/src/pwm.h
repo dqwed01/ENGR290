@@ -1,11 +1,11 @@
 #ifndef PWM_H
 #define PWM_H
 
-#define PWM_FREQ_HZ   1000UL
-#define PWM_PRESCALER 8UL                                   // CS11
-#define PWM_TOP       ((F_CPU / (PWM_PRESCALER * PWM_FREQ_HZ)) - 1)   // 1999 -> 1 kHz
+#include <stdint.h>
+
+#define FAN_PWM_TOP 255   // Timer0 Phase Correct mode with TOP = 255: 16 MHz / (2*255) = 31.4 kHz
 
 void pwm_init(void);
-void pwm_set_duty(uint8_t percent);   // 0-100
+void pwm_set_duty(volatile uint8_t* OCRx, uint8_t top, uint8_t percent);
 
 #endif

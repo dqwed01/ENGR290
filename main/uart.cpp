@@ -40,7 +40,7 @@ bool uart_queue_report(float roll, float pitch, float yaw,
     dtostrf(positionx, 1, 2, position_text);
 
     int length = snprintf(tx_buffer, sizeof(tx_buffer),
-                          "roll=%s pitch=%s yaw=%s deg | ax=%s ay=%s az=%s | postitionx=%s g\r\n",
+                          "roll=%s pitch=%s yaw=%s deg | ax=%s ay=%s az=%s | positionx=%s g\r\n",
                           roll_text, pitch_text, yaw_text, ax_text, ay_text,
                           az_text, position_text);
     if (length < 0) {
