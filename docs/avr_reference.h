@@ -54,7 +54,7 @@
 
 #undef ISR
 /**
- * Defines an interrupt service routine: ISR(TIMER0_COMPB_vect) { ... }
+ * Defines an interrupt service routine: ISR(TIMER2_COMPB_vect) { ... }
  * The compiler saves/restores registers and ends with RETI.
  * Runs with interrupts disabled. Keep it short; shared variables must be volatile.
  */
@@ -67,13 +67,13 @@
  */
 #define _BV(bit) (1 << (bit))
 
-#undef TIMER0_COMPB_vect
+#undef TIMER2_COMPB_vect
 /**
- * Interrupt vector 15: Timer/Counter0 Compare Match B.
- * Fires when TCNT0 == OCR0B, if TIMSK0.OCIE0B = 1 and interrupts are enabled.
- * This project: the 1 ms tick in timer.cpp (OCR0B += 250; ms_ticks++).
+ * Interrupt vector 8: Timer/Counter2 Compare Match B.
+ * Fires when TCNT2 == OCR2B, if TIMSK2.OCIE2B = 1 and interrupts are enabled.
+ * This project: the 1 ms tick in timer.cpp (OCR2B += 250; ms_ticks++).
  */
-#define TIMER0_COMPB_vect _VECTOR(15)
+#define TIMER2_COMPB_vect _VECTOR(8)
 
 /* ==========================================================================
  * GPIO port registers
@@ -179,7 +179,7 @@
 #undef PB3
 /**
  * Port B bit 3 = Nano D11. Also OC2A (Timer2 compare A PWM output) and SPI MOSI.
- * This project: LIFT_FAN_PWM (OC2A, phase-correct PWM at 31.4 kHz).
+ * Unused in this project (Timer2 runs the 1 ms clock, with OC2A disconnected).
  */
 #define PB3 PORTB3
 
@@ -247,12 +247,26 @@
 #undef PD3
 /**
  * Port D bit 3 = Nano D3. Also OC2B (Timer2 compare B output) and INT1.
- * This project: THRUST_FAN_PWM (OC2B, phase-correct PWM at 31.4 kHz).
+ * Unused in this project (Timer2 runs the 1 ms clock, with OC2B disconnected).
  */
 #define PD3 PORTD3
 
+#undef PD5
+/**
+ * Port D bit 5 = Nano D5. Also OC0B (Timer0 compare B PWM output).
+ * This project: THRUST_FAN_PWM (OC0B, phase-correct PWM at 31.4 kHz).
+ */
+#define PD5 PORTD5
+
+#undef PD6
+/**
+ * Port D bit 6 = Nano D6. Also OC0A (Timer0 compare A PWM output).
+ * This project: LIFT_FAN_PWM (OC0A, phase-correct PWM at 31.4 kHz).
+ */
+#define PD6 PORTD6
+
 /* ==========================================================================
- * Timer/Counter0 (8-bit): 1 ms system clock
+ * Timer/Counter0 (8-bit): lift and thrust fan PWM
  * ========================================================================== */
 
 #undef TCCR0A
@@ -263,7 +277,10 @@
  * bits 1:0 WGM01:0  : waveform mode (low bits; WGM02 is in TCCR0B).
  * Modes WGM02:0: 0 Normal (0..0xFF)  1 Phase-correct PWM  2 CTC (TOP=OCR0A)
  *                3 Fast PWM (TOP=0xFF)  5 Phase-correct (TOP=OCR0A)  7 Fast PWM (TOP=OCR0A)
- * This project: TCCR0A = 0 -> Normal mode, pins disconnected.
+ * PWM COM bits: 10 non-inverting, 11 inverting, 00 pin disconnected.
+ * Phase-correct non-inverting: clear on match counting up, set on match counting down.
+ * This project: COM0A1 | COM0B1 | WGM00 -> mode 1, non-inverting PWM on both fan pins
+ * (PD6 lift, PD5 thrust). Modes 5/7 would use OCR0A as TOP, leaving only OC0B for a fan.
  */
 #define TCCR0A _SFR_IO8(0x24)
 
@@ -275,7 +292,9 @@
  * bits 2:0 CS02:0 clock select: 0 STOPPED  1 clk/1  2 clk/8  3 clk/64  4 clk/256
  *                               5 clk/1024  6 ext T0 falling  7 ext T0 rising
  * Tick at 16 MHz: /8 = 0.5 us, /64 = 4 us, /256 = 16 us, /1024 = 64 us.
- * This project: 0x03 (/64, 4 us) for the ms clock. read_pulse() switches it to /256 and then STOPS it.
+ * Phase-correct period = 2*TOP ticks (up 255 steps, down 255 steps); Fast PWM = TOP+1 ticks.
+ * This project: CS00 -> /1 -> phase-correct PWM at 16 MHz / (2*255) = 31.4 kHz.
+ * Note: Arduino core's millis()/delay() use Timer0. This project doesn't call them.
  */
 #define TCCR0B _SFR_IO8(0x25)
 
@@ -288,18 +307,19 @@
 
 #undef OCR0A
 /**
- * Output Compare Register 0A (8-bit). Compared with TCNT0 every tick.
- * On match: sets OCF0A, can fire TIMER0_COMPA_vect, can drive OC0A (PD6).
- * Unused in this project.
+ * Output Compare Register 0A (8-bit): PWM duty for OC0A (PD6/D6).
+ * Phase-correct non-inverting: duty = OCR0A / 255. 0 = solid low, 255 = solid high.
+ * (Fast PWM gives (OCR0A + 1) / 256 instead, so 0 still leaves a 1-tick spike.)
+ * In modes 5 and 7 it is TOP instead of a duty value.
+ * This project: lift fan duty, written by pwm_set_duty(&OCR0A, FAN_PWM_TOP, percent).
  */
 #define OCR0A _SFR_IO8(0x27)
 
 #undef OCR0B
 /**
- * Output Compare Register 0B (8-bit). Compared with TCNT0 every tick.
- * On match: sets OCF0B, fires TIMER0_COMPB_vect if OCIE0B = 1, can drive OC0B (PD5).
- * This project: the ISR does OCR0B += 250. Being 8-bit, that is -6 mod 256,
- * so the next match is exactly 250 ticks (1.000 ms) later.
+ * Output Compare Register 0B (8-bit): PWM duty for OC0B (PD5/D5).
+ * Phase-correct non-inverting: duty = OCR0B / 255. 0 = solid low, 255 = solid high.
+ * This project: thrust fan duty, written by pwm_set_duty(&OCR0B, FAN_PWM_TOP, percent).
  */
 #define OCR0B _SFR_IO8(0x28)
 
@@ -309,7 +329,7 @@
  * bit 2 OCIE0B : compare match B -> TIMER0_COMPB_vect
  * bit 1 OCIE0A : compare match A -> TIMER0_COMPA_vect
  * bit 0 TOIE0  : overflow        -> TIMER0_OVF_vect
- * This project: only OCIE0B.
+ * This project: none (TIMSK0 = 0). Timer0 only generates PWM.
  */
 #define TIMSK0 _SFR_MEM8(0x6E)
 
@@ -325,7 +345,7 @@
 
 #undef COM0A1
 /**
- * TCCR0A bit 7. With COM0A0 selects OC0A (PD6) pin behaviour.
+ * TCCR0A bit 7. COM0A1:0 = 10 -> non-inverting PWM on OC0A (PD6/D6), the lift fan.
  */
 #define COM0A1 7
 
@@ -337,7 +357,7 @@
 
 #undef COM0B1
 /**
- * TCCR0A bit 5. With COM0B0 selects OC0B (PD5) pin behaviour.
+ * TCCR0A bit 5. COM0B1:0 = 10 -> non-inverting PWM on OC0B (PD5/D5), the thrust fan.
  */
 #define COM0B1 5
 
@@ -355,7 +375,7 @@
 
 #undef WGM00
 /**
- * TCCR0A bit 0. Waveform Generation Mode bit 0 (see TCCR0A).
+ * TCCR0A bit 0. Waveform Generation Mode bit 0. WGM02:0 = 001 -> Phase-correct PWM, TOP 0xFF (this project).
  */
 #define WGM00 0
 
@@ -379,7 +399,7 @@
 
 #undef CS00
 /**
- * TCCR0B bit 0. Clock Select bit 0. CS02:0 = 001 -> clk/1, 011 -> clk/64.
+ * TCCR0B bit 0. Clock Select bit 0. CS02:0 = 001 -> clk/1 (this project), 011 -> clk/64.
  */
 #define CS00 0
 
@@ -416,7 +436,6 @@
 #undef TOV0
 /**
  * TIFR0 bit 0. Set when TCNT0 overflows (255 -> 0). Clear by writing 1.
- * This project: read_pulse() polls it to count overflows while timing the echo.
  */
 #define TOV0 0
 
@@ -459,7 +478,7 @@
  * Output Compare Register 1A (16-bit).
  * In PWM modes it is double-buffered: a new value takes effect at BOTTOM, so pulses never glitch.
  * This project: servo pulse width in 0.5 us ticks. SERVO_PWM_CENTER (3000) = 1.5 ms = centre.
- * pwm_set_servo_angle() writes SERVO_PWM_CENTER + 20*angle (10 us per degree, clamped to +/-80).
+ * servo_set_angle() writes SERVO_PWM_CENTER + 20*angle (10 us per degree, clamped to +/-80).
  */
 #define OCR1A _SFR_MEM16(0x88)
 
@@ -572,7 +591,7 @@
 #define ICES1 6
 
 /* ==========================================================================
- * Timer/Counter2 (8-bit): lift and thrust fan PWM
+ * Timer/Counter2 (8-bit): 1 ms system clock (timer_millis / timer_micros)
  * ========================================================================== */
 
 #undef TCCR2A
@@ -580,12 +599,9 @@
  * Timer/Counter2 Control Register A.
  * bits 7:6 COM2A1:0 : OC2A pin (PB3/D11) behaviour.   bits 5:4 COM2B1:0 : OC2B pin (PD3/D3).
  * bits 1:0 WGM21:20 : waveform mode low bits (WGM22 in TCCR2B).
- * Modes WGM22:0: 1 Phase-correct PWM (TOP=0xFF)  2 CTC (TOP=OCR2A)  3 Fast PWM (TOP=0xFF)
- *                5 Phase-correct (TOP=OCR2A)  7 Fast PWM (TOP=OCR2A)
- * PWM COM bits: 10 non-inverting, 11 inverting, 00 pin disconnected.
- * Phase-correct non-inverting: clear on match counting up, set on match counting down.
- * This project: WGM20 | COM2A1 | COM2B1 -> mode 1, non-inverting PWM on both fan pins
- * (PB3 lift, PD3 thrust). Modes 5/7 would use OCR2A as TOP, leaving only OC2B for a fan.
+ * Modes WGM22:0: 0 Normal (0..0xFF)  1 Phase-correct PWM (TOP=0xFF)  2 CTC (TOP=OCR2A)
+ *                3 Fast PWM (TOP=0xFF)  5 Phase-correct (TOP=OCR2A)  7 Fast PWM (TOP=OCR2A)
+ * This project: TCCR2A = 0 -> Normal mode, pins disconnected.
  */
 #define TCCR2A _SFR_MEM8(0xB0)
 
@@ -595,68 +611,87 @@
  * bit 3    WGM22  : waveform mode high bit.
  * bits 2:0 CS22:20: clock select. NOTE: Timer2's table differs from Timer0/1:
  *    0 stopped  1 /1  2 /8  3 /32  4 /64  5 /128  6 /256  7 /1024   (no external clock)
- * Phase-correct period = 2*TOP ticks (up 255 steps, down 255 steps); Fast PWM = TOP+1 ticks.
- * This project: CS20 -> /1 -> phase-correct PWM at 16 MHz / (2*255) = 31.4 kHz.
+ * This project: CS22 -> /64 -> 4 us per tick for the ms clock.
  */
 #define TCCR2B _SFR_MEM8(0xB1)
 
 #undef TCNT2
 /**
- * Timer/Counter2 counter value (8-bit).
+ * Timer/Counter2 counter value (8-bit). In Normal mode it wraps 255 -> 0 and sets TOV2.
+ * This project: timer_micros() reads it to get the ticks since the last OCR2B match.
  */
 #define TCNT2 _SFR_MEM8(0xB2)
 
 #undef OCR2A
 /**
- * Output Compare Register 2A (8-bit): PWM duty for OC2A (PB3/D11).
- * Phase-correct non-inverting: duty = OCR2A / 255. 0 = solid low, 255 = solid high.
- * (Fast PWM gives (OCR2A + 1) / 256 instead, so 0 still leaves a 1-tick spike.)
- * In modes 5 and 7 it is TOP instead of a duty value.
- * This project: lift fan duty, written by pwm_set_fan_speed(&OCR2A, percent).
+ * Output Compare Register 2A (8-bit). Compared with TCNT2 every tick.
+ * In modes 2, 5 and 7 it is TOP instead of a compare value.
+ * Unused in this project.
  */
 #define OCR2A _SFR_MEM8(0xB3)
 
 #undef OCR2B
 /**
- * Output Compare Register 2B (8-bit): PWM duty for OC2B (PD3/D3).
- * Phase-correct non-inverting: duty = OCR2B / 255. 0 = solid low, 255 = solid high.
- * This project: thrust fan duty. main.ino sets it from |ax| via pwm_set_fan_speed(&OCR2B, percent).
+ * Output Compare Register 2B (8-bit). Compared with TCNT2 every tick.
+ * On match: sets OCF2B, fires TIMER2_COMPB_vect if OCIE2B = 1, can drive OC2B (PD3).
+ * This project: the ISR does OCR2B += 250. Being 8-bit, that is -6 mod 256,
+ * so the next match is exactly 250 ticks (1.000 ms) later.
  */
 #define OCR2B _SFR_MEM8(0xB4)
 
+#undef TIMSK2
+/**
+ * Timer/Counter2 Interrupt Mask Register (1 = interrupt enabled).
+ * bit 2 OCIE2B : compare match B -> TIMER2_COMPB_vect
+ * bit 1 OCIE2A : compare match A -> TIMER2_COMPA_vect
+ * bit 0 TOIE2  : overflow        -> TIMER2_OVF_vect
+ * This project: only OCIE2B.
+ */
+#define TIMSK2 _SFR_MEM8(0x70)
+
+#undef TIFR2
+/**
+ * Timer/Counter2 Interrupt Flag Register.
+ * bit 2 OCF2B : compare B matched   bit 1 OCF2A : compare A matched   bit 0 TOV2 : overflowed
+ * Hardware sets the flags. Cleared automatically when the ISR runs, or by WRITING A 1.
+ * Don't use |= : it reads every set flag back as 1 and clears all of them.
+ * This project: timer_micros() checks OCF2B to catch a match whose ISR hasn't run yet.
+ */
+#define TIFR2 _SFR_IO8(0x17)
+
 #undef COM2A1
 /**
- * TCCR2A bit 7. COM2A1:0 = 10 -> non-inverting PWM on OC2A (PB3/D11), the lift fan.
+ * TCCR2A bit 7. With COM2A0 selects OC2A (PB3/D11) pin behaviour.
  */
 #define COM2A1 7
 
 #undef COM2A0
 /**
- * TCCR2A bit 6. COM2A1:0 = 11 -> inverting PWM on OC2A (PB3/D11).
+ * TCCR2A bit 6. With COM2A1 selects OC2A (PB3/D11) pin behaviour.
  */
 #define COM2A0 6
 
 #undef COM2B1
 /**
- * TCCR2A bit 5. COM2B1:0 = 10 -> non-inverting PWM on OC2B (PD3/D3), the thrust fan.
+ * TCCR2A bit 5. With COM2B0 selects OC2B (PD3/D3) pin behaviour.
  */
 #define COM2B1 5
 
 #undef COM2B0
 /**
- * TCCR2A bit 4. COM2B1:0 = 11 -> inverting PWM on OC2B (PD3/D3).
+ * TCCR2A bit 4. With COM2B1 selects OC2B (PD3/D3) pin behaviour.
  */
 #define COM2B0 4
 
 #undef WGM21
 /**
- * TCCR2A bit 1. Waveform mode bit 1. WGM22:0 = 011 -> Fast PWM, TOP 0xFF. Not set in this project.
+ * TCCR2A bit 1. Waveform mode bit 1 (see TCCR2A).
  */
 #define WGM21 1
 
 #undef WGM20
 /**
- * TCCR2A bit 0. Waveform mode bit 0. WGM22:0 = 001 -> Phase-correct PWM, TOP 0xFF (this project).
+ * TCCR2A bit 0. Waveform mode bit 0 (see TCCR2A).
  */
 #define WGM20 0
 
@@ -668,7 +703,8 @@
 
 #undef CS22
 /**
- * TCCR2B bit 2. Clock Select bit 2 (Timer2 table: 4 = /64, 5 = /128, 6 = /256, 7 = /1024).
+ * TCCR2B bit 2. Clock Select bit 2. CS22:20 = 100 -> clk/64 (this project, 4 us/tick).
+ * Timer2 table: 4 = /64, 5 = /128, 6 = /256, 7 = /1024.
  */
 #define CS22 2
 
@@ -680,9 +716,45 @@
 
 #undef CS20
 /**
- * TCCR2B bit 0. Clock Select bit 0. CS22:20 = 001 -> clk/1 (this project), 011 -> clk/32.
+ * TCCR2B bit 0. Clock Select bit 0. CS22:20 = 001 -> clk/1, 011 -> clk/32.
  */
 #define CS20 0
+
+#undef OCIE2B
+/**
+ * TIMSK2 bit 2. Enable the Timer2 Compare Match B interrupt (TIMER2_COMPB_vect).
+ */
+#define OCIE2B 2
+
+#undef OCIE2A
+/**
+ * TIMSK2 bit 1. Enable the Timer2 Compare Match A interrupt (TIMER2_COMPA_vect).
+ */
+#define OCIE2A 1
+
+#undef TOIE2
+/**
+ * TIMSK2 bit 0. Enable the Timer2 Overflow interrupt (TIMER2_OVF_vect).
+ */
+#define TOIE2 0
+
+#undef OCF2B
+/**
+ * TIFR2 bit 2. Set when TCNT2 == OCR2B. Clear by writing 1.
+ */
+#define OCF2B 2
+
+#undef OCF2A
+/**
+ * TIFR2 bit 1. Set when TCNT2 == OCR2A. Clear by writing 1.
+ */
+#define OCF2A 1
+
+#undef TOV2
+/**
+ * TIFR2 bit 0. Set when TCNT2 overflows (255 -> 0). Clear by writing 1.
+ */
+#define TOV2 0
 
 /* ==========================================================================
  * USART0: serial to the PC

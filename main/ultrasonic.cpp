@@ -16,10 +16,22 @@
 static char debug_message[64] = {0};
 #endif
 
+#ifdef LOGGING
+// One "label:value" line per reading, the format the Arduino Serial Plotter
+// expects. Non-readings show up as US_NO_READING (-1) or US_OUT_OF_RANGE.
+static void us_plot(float distance_cm){
+    char num[10];
+    char line[24];
+    dtostrf(distance_cm, 1, 2, num);
+    sprintf(line, "distance_cm:%s\n", num);
+    UART_transmit(line);
+}
+#endif
+
 void us_sensor_init(){
     DDRB |= (OUTPUT<<US1_TRIG); //Set TRIG pin to Output
     DIGITAL_WRITE_LOW(PORTB, US1_TRIG);
-    DDRB &= ~((1)<<US1_ECHO); 
+    DDRB &= ~((1)<<US1_ECHO);
 }
 
 // Time after the trigger for the echo pin to go HIGH. The sensor sends its
@@ -55,7 +67,7 @@ static uint16_t read_pulse(volatile uint8_t* p_port, uint8_t pin, uint8_t value,
 
     uint16_t pulse_us = (uint16_t)(timer_micros() - start);
     #ifdef DEBUGGING
-    sprintf(debug_message, "read_pulse: pulse %u us\n", pulse_us);
+    sprintf(debug_message, "read_pulse(us):%u\n", pulse_us);
     UART_transmit(debug_message);
     #endif
     return pulse_us;
@@ -76,6 +88,9 @@ float us_read(){
         #ifdef DEBUGGING
         UART_transmit("us_read: Sensor busy, skipping\n");
         #endif
+        #ifdef LOGGING
+        us_plot(US_NO_READING);
+        #endif
         return US_NO_READING;
     }
 
@@ -87,7 +102,7 @@ float us_read(){
     //Get Echo pulse
     uint16_t pulse_us = read_pulse(us_echo_port, us_echo, HIGH, US_TIMEOUT_US);
     if (pulse_us == 0) {
-        return US_NO_READING;           // Sensor never responded
+        distance_cm = US_NO_READING;    // Sensor never responded
     } else if (pulse_us == 0xFFFF) {
         distance_cm = US_OUT_OF_RANGE;  // Nothing within US_MAX_CM
     } else {
@@ -98,6 +113,9 @@ float us_read(){
     dtostrf(distance_cm, 1, 2, num);
     sprintf(debug_message, "us_read: %s cm\n", num);
     UART_transmit(debug_message);
+    #endif
+    #ifdef LOGGING
+    us_plot(distance_cm);
     #endif
     return distance_cm;
 }

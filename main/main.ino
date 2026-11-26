@@ -11,10 +11,13 @@
 #include "src/util.h"
 #include "src/timer.h"
 #include "src/pwm.h"
+#include "src/pins.h"
 #include "src/servo.h"
 #include "src/global.h"
 #include "src/imu.h"
 #include "src/uart.h"
+#include "src/ultrasonic.h"
+#include "src/infrared.h"
 #include <util/delay.h>
  
 // ---- Tunable behaviour -----------------------------------------------------
@@ -25,19 +28,6 @@
 int main(){
     hovercraft_init();
     uart_report_init(start_ms);
- 
-    float yaw_deg   = 0;
-    float roll_deg  = 0;
-    float pitch_deg = 0;
-    float ax = 0;
-    float ay = 0;
-    float az = 0;
- 
-    uint32_t last_servo_ms  = start_ms;
-
-    float dt = 0;
-    float velocityx = 0;
-    float positionx = 0;
  
     while(1) {
         pwm_set_duty(&OCR0A, 255, 80); // set lift fan
@@ -59,6 +49,9 @@ int main(){
         _delay_ms(5000);
         pwm_set_duty(&OCR0B, 255, 100);
         _delay_ms(5000);
+        ifr_read(IR_SENSOR1_PIN);
+        ifr_read(IR_SENSOR2_PIN);
+        us_read();
     }
  
     return 0;
