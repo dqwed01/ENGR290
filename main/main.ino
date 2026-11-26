@@ -29,22 +29,10 @@ int main(){
     hovercraft_init();
     uart_report_init(start_ms);
  
-    float yaw_deg   = 0;
-    float roll_deg  = 0;
-    float pitch_deg = 0;
-    float ax = 0;
-    float ay = 0;
-    float az = 0;
- 
-    uint32_t last_servo_ms  = start_ms;
-
-    float dt = 0;
-    float velocityx = 0;
-    float positionx = 0;
- 
     while(1) {
         ifr_read(IR_SENSOR1_PIN);
         ifr_read(IR_SENSOR2_PIN);
+        us_read();
     }
  
     return 0;

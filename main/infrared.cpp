@@ -18,8 +18,7 @@ static char debug_message[64] = {0};
 
 // ---- Smoothing -------------------------------------------------------------
 // Two stages, both on the raw ADC value (before the nonlinear cm conversion):
-//  1. Median of IFR_SAMPLES back-to-back reads rejects the single-sample
-//     spikes Sharp sensors are known for.
+//  1. Median of IFR_SAMPLES back-to-back reads rejects single-sample spikes
 //  2. An exponential moving average per pin smooths what's left.
 //     Higher IFR_EMA_ALPHA = faster response, lower = smoother.
 #define IFR_SAMPLES    5      // odd number, kept small since each read is ~0.2 ms
