@@ -1,0 +1,31 @@
+name: Compile Sketches
+
+on:
+  push:
+    paths:
+      - "main/**"
+      - ".github/workflows/compile-sketches.yml"
+  pull_request:
+    paths:
+      - "main/**"
+      - ".github/workflows/compile-sketches.yml"
+  workflow_dispatch:
+
+jobs:
+  compile:
+    name: Compile for Arduino Nano
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Compile sketch
+        uses: arduino/compile-sketches@v1
+        with:
+          fqbn: arduino:avr:nano:cpu=atmega328old
+          platforms: |
+            - name: arduino:avr
+          sketch-paths: |
+            - main
+          enable-warnings-report: true

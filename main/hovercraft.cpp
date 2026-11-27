@@ -2,7 +2,7 @@
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <avr/delay.h>
+#include <util/delay.h>
 
 #include "src/hovercraft.h"
 #include "src/pins.h"
@@ -11,19 +11,21 @@
 #include "src/timer.h"
 #include "src/infrared.h"
 #include "src/pwm.h"
-#include "src/global.h"
 #include "src/servo.h"
+#include "src/global.h"
 #include "src/imu.h"
 
 #ifdef DEBUGGING
 static char debug_message[64] = {0};
 #endif
 
+#define BAR_DISTANCE_CM 50
+
 static hovercraft_modes mode = HOVERCRAFT_MOVING;
 static void adjust_thrust_fan(hovercraft_modes, float, float, float);
 static void is_turn_condition(float, float);
 static void is_move_condition(float, float);
-static void get_sensor_data()
+static void get_sensor_data();
 
 
 void hovercraft_init(){
@@ -34,6 +36,9 @@ void hovercraft_init(){
     us_sensor_init();
     adc_init();
     servo_init();
+    timer_init();
+    us_sensor_init();
+    adc_init();
     mpu6050_init();
     mpu6050_set_gyro_range(MPU6050_GYRO_250_DPS);
     mpu6050_set_accel_range(MPU6050_ACCEL_2G);
@@ -63,8 +68,8 @@ void hovercraft_act(){
     uart_report_update(timer_millis(), roll_deg, pitch_deg, yaw_deg, ax, ay, az, h_ifr_distance[0], h_ifr_distance[1], us_distance);
     if(us_distance <= BAR_DISTANCE_CM){
         //Add code to turn off Lift Fan here
-        delay_ms(5000);
-        return;
+        // _delay_ms(5000);
+        // return;
     }
     switch(mode){
         case HOVERCRAFT_MOVING:
